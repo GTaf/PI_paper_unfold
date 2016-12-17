@@ -8,8 +8,8 @@ import Jcg.mesh.MeshLoader;
 import Jcg.polyhedron.*;
 
 public class Unfold {
-	private Polyhedron_3<Point_2> M; // Patron du polyÃ¨dre
-	private Polyhedron_3<Point_3> S; // PolyÃ¨dre original
+	private Polyhedron_3<Point_2> M; // Patron du polyèdre
+	private Polyhedron_3<Point_3> S; // Polyèdre original
 
 	public Unfold(String fichier) {
 		S = MeshLoader.getSurfaceMesh(fichier);
@@ -17,7 +17,7 @@ public class Unfold {
 		// creer le cut tree
 		List<Halfedge<Point_3>> cutTree = computeCutTree(S);
 		
-		//couper le mesh et le mettre Ã  plat
+		//couper le mesh et le mettre à plat
 		
 		cutMesh(S,cutTree);
 
@@ -29,7 +29,7 @@ public class Unfold {
 		LinkedList<Vertex<Point_3>> queue = new LinkedList<Vertex<Point_3>>();
 
 		for (Halfedge<Point_3> h : S.halfedges) {
-			h.vertex.tag = 0; // signifie pas encore visitÃ©
+			h.vertex.tag = 0; // signifie pas encore visité
 		}
 		if (S.vertices.size() == 0)
 			return null;
@@ -40,14 +40,14 @@ public class Unfold {
 		while (!queue.isEmpty()) {
 			Vertex<Point_3> v = queue.removeFirst();
 			Halfedge<Point_3> h = v.getHalfedge();
-			v.tag = 2; // marque le cotÃ© comme traitÃ©
+			v.tag = 2; // marque le coté comme traité
 
 			Halfedge<Point_3> H = h;
 			while (H != h) {
 				if (H.opposite.vertex.tag == 0) {
 					result.add(H.opposite);
 					H.face.tag = 1;
-					H.opposite.vertex.tag = 1;// va Ãªtre traitÃ©
+					H.opposite.vertex.tag = 1;// va être traité
 					queue.addLast(H.opposite.vertex);// addFirst pour DFS
 				}
 				H = H.next.opposite;
