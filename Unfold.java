@@ -8,39 +8,57 @@ import Jcg.mesh.MeshLoader;
 import Jcg.polyhedron.*;
 
 public class Unfold {
-	private Polyhedron_3<Point_2> M; // Patron du poly�dre
-	private Polyhedron_3<Point_3> S; // Poly�dre original
+	private Polyhedron_3<Point_2> M; // Patron du polyèdre
+	private Polyhedron_3<Point_3> S; // Polyèdre original
 
 	public Unfold(String fichier) {
 		S = MeshLoader.getSurfaceMesh(fichier);
 
 		// creer le cut tree
-		List<Vertex<Point_3>> L = new LinkedList<Vertex<Point_3>>();
-		for (Vertex<Point_3> v : S.vertices)
-			L.add(v);
-		Vertex<Point_3> v = L.remove(0);
-		JTree J;
-
-		// remettre sous forme OFF
+		List<Halfedge<Point_3>> cutTree = computeCutTree(S);
+		
+		//couper le mesh et le mettre à plat
+		
+		cutMesh(S,cutTree);
 
 	}
 
-	/* Creates the first face of M, with face f from S, adding triangles */
-	public static void addFirstFace(Polyhedron_3<Point_2> M, Face<Point_3> f) {
-		Halfedge<Point_3> h = f.getEdge();
+	/* Compute BFS or DFS cut tree */
+	public static List<Halfedge<Point_3>> computeCutTree(Polyhedron_3<Point_3> S) {
+		LinkedList<Halfedge<Point_3>> result = new LinkedList<Halfedge<Point_3>>();
+		LinkedList<Vertex<Point_3>> queue = new LinkedList<Vertex<Point_3>>();
 
-		// ajout des deux premiers points
-		M.vertices.add(new Vertex<Point_2>(new Point_2(0, 0))); // premier point
-																// de M
-		Point_3 p = h.vertex.getPoint(); // stocke le point de h
-		M.vertices.add(new Vertex<Point_2>(new Point_2(0, p.distanceFrom(h.next.vertex.getPoint()))));
+		for (Halfedge<Point_3> h : S.halfedges) {
+			h.vertex.tag = 0; // signifie pas encore visité
+		}
+		if (S.vertices.size() == 0)
+			return null;
 
-		// ajout du premier half-edge
-		Halfedge<Point_2> H = new Halfedge<Point_2>();
+		queue.addFirst(S.vertices.get(0)); // ajout initial du premier halfedge
+											// dans queue
+		// ajoute les voisins
+		while (!queue.isEmpty()) {
+			Vertex<Point_3> v = queue.removeFirst();
+			Halfedge<Point_3> h = v.getHalfedge();
+			v.tag = 2; // marque le coté comme traité
 
-		Face<Point_2> F = new Face<>();
-		H.vertex = M.vertices.get(0);
-
+			Halfedge<Point_3> H = h;
+			while (H != h) {
+				if (H.opposite.vertex.tag == 0) {
+					result.add(H.opposite);
+					H.face.tag = 1;
+					H.opposite.vertex.tag = 1;// va être traité
+					queue.addLast(H.opposite.vertex);// addFirst pour DFS
+				}
+				H = H.next.opposite;
+			}
+		}
+		return result;
 	}
+	
+	
+	/*Cut the mesh according to the cut Tree given*/
+	
+	public static Polyhedron_3<Point_2> 
 
 }
