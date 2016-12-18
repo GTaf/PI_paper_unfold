@@ -16,15 +16,16 @@ public class Unfold {
 	/*computing the unfolding M given the mesh S of the unfold instance*/
 	public void computeM() {
 		// creer le cut tree
-		List<Halfedge<Point_3>> cutTree = computeCutTree(this.S);
+		Hashtable<Integer, Halfedge<Point_3>> cutTree = computeCutTree(this.S);
 
 		// couper le mesh et le mettre a  plat
-		this.M = cutMesh(cutTree, this.S);
+		this.M = this.cutMesh(cutTree);
 	}
 
 	/* Compute BFS or DFS cut tree */
-	public static List<Halfedge<Point_3>> computeCutTree(Polyhedron_3<Point_3> S) {
-		LinkedList<Halfedge<Point_3>> result = new LinkedList<Halfedge<Point_3>>();
+	public static Hashtable<Integer, Halfedge<Point_3>> computeCutTree(Polyhedron_3<Point_3> S) {
+		//LinkedList<Halfedge<Point_3>> result = new LinkedList<Halfedge<Point_3>>();
+		Hashtable<Integer, Halfedge<Point_3>> ht = new Hashtable<Integer, Halfedge<Point_3>>();
 		LinkedList<Vertex<Point_3>> queue = new LinkedList<Vertex<Point_3>>();
 
 		resetTag3D(S); // met les tags a  0 : pas encore visite
@@ -44,7 +45,8 @@ public class Unfold {
 			Halfedge<Point_3> H = h;
 			while (H.next.opposite != h) {
 				if (H.opposite.vertex.tag == 0) {
-					result.add(H.opposite);
+					//result.add(H.opposite);
+					ht.put(H.opposite.hashCode(), H.opposite);
 					H.face.tag = 1;
 					H.opposite.vertex.tag = 1;// va Ãªtre traitÃ©
 					queue.addLast(H.opposite.vertex);// addFirst pour DFS
@@ -52,12 +54,44 @@ public class Unfold {
 				H = H.next.opposite;
 			}
 		}
-		return result;
+		return ht;
 	}
 
 	/* Cut the mesh according to the cut Tree given TO BE COMPLETED*/
 
-	public static Polyhedron_3<Point_2> cutMesh(List<Halfedge<Point_3>> cutTree, Polyhedron_3<Point_3> S) {
+	public Polyhedron_3<Point_2> cutMesh(Hashtable<Integer, Halfedge<Point_3>> cutTree) {
+		resetTag3D(this.S);//aucune face visitée
+		LinkedList<Face<Point_3>> parcours = new LinkedList<Face<Point_3>>();
+		
+		//parcours en largeur du graphe pour l'ordre de depliage
+		LinkedList<Face<Point_3>> queue = new LinkedList<Face<Point_3>>();		
+		queue.addFirst(this.S.facets.get(0));
+		while(!queue.isEmpty()){
+			Face<Point_3> f = queue.removeFirst();
+			parcours.add(f);
+			f.tag = 1;
+			Halfedge<Point_3> H = f.getEdge();
+			while(H.next != f.getEdge()){//fait le tour des cote de la face
+				if(!cutTree.containsValue(H) && ! cutTree.containsValue(H.opposite)&& H.opposite.face.tag == 0){//pas encore vue et pas coupé
+					queue.add(H.opposite.face);//va etre traitee
+					H.opposite.face.tag = 1;
+					H.opposite.face.setEdge(H.opposite);//dit quelle est l'endroit d'entrée
+				}
+				H = H.next;
+			}
+			if(!cutTree.containsValue(H) && ! cutTree.containsValue(H.opposite)&& H.opposite.face.tag == 0){//pas encore vue et pas coupé
+				queue.add(H.opposite.face);//va etre traitee
+				H.opposite.face.tag = 1;
+				H.opposite.face.setEdge(H.opposite);
+			}
+		}
+		//parcours contient l'ordre dans lequel il faut découper les faces
+		
+		for(Face<Point_3> f : parcours){
+			f.to2D();
+		}
+		
+		
 		return null;
 	}
 
