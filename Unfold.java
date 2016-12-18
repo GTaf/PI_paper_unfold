@@ -9,7 +9,9 @@ import tc.TC;
 public class Unfold {
 	private Polyhedron_3<Point_2> M; // Patron du polyedre
 	private Polyhedron_3<Point_3> S; // Polyedre original
+	private Hashtable<Halfedge<Point_3>, Halfedge<Point_2>> plani ; //corrÃ©lation entre S et M
 
+		
 	public Unfold(String fichier) {
 		this.S = MeshLoader.getSurfaceMesh(fichier);
 	}
@@ -49,7 +51,7 @@ public class Unfold {
 		// creer le cut tree
 		Hashtable<Integer, Halfedge<Point_3>> cutTree = computeCutTree(this.S);
 
-		// couper le mesh et le mettre a  plat
+		// couper le mesh et le mettre aÂ  plat
 		this.cutMesh(cutTree);
 	}
 
@@ -59,7 +61,7 @@ public class Unfold {
 		Hashtable<Integer, Halfedge<Point_3>> ht = new Hashtable<Integer, Halfedge<Point_3>>();
 		LinkedList<Vertex<Point_3>> queue = new LinkedList<Vertex<Point_3>>();
 
-		resetTag3D(S); // met les tags a  0 : pas encore visite
+		resetTag3D(S); // met les tags aÂ  0 : pas encore visite
 
 		if (S.vertices.size() == 0)
 			return null;
@@ -79,7 +81,7 @@ public class Unfold {
 					//result.add(H.opposite);
 					ht.put(H.opposite.hashCode(), H.opposite);
 					H.face.tag = 1;
-					H.opposite.vertex.tag = 1;// va Ãªtre traitÃ©
+					H.opposite.vertex.tag = 1;// va ÃƒÂªtre traitÃƒÂ©
 					queue.addLast(H.opposite.vertex);// addFirst pour DFS
 				}
 				H = H.next.opposite;
@@ -91,7 +93,7 @@ public class Unfold {
 	/* Cut the mesh according to the cut Tree given TO BE COMPLETED*/
 
 	public void cutMesh(Hashtable<Integer, Halfedge<Point_3>> cutTree) {
-		resetTag3D(this.S);//aucune face visitée
+		resetTag3D(this.S);//aucune face visitÃ©e
 		LinkedList<Face<Point_3>> parcours = new LinkedList<Face<Point_3>>();
 		
 		//parcours en largeur du graphe pour l'ordre de depliage
@@ -103,24 +105,24 @@ public class Unfold {
 			f.tag = 1;
 			Halfedge<Point_3> H = f.getEdge();
 			while(H.next != f.getEdge()){//fait le tour des cote de la face
-				if(!cutTree.containsValue(H) && ! cutTree.containsValue(H.opposite)&& H.opposite.face.tag == 0){//pas encore vue et pas coupé
+				if(!cutTree.containsValue(H) && ! cutTree.containsValue(H.opposite)&& H.opposite.face.tag == 0){//pas encore vue et pas coupÃ©
 					queue.add(H.opposite.face);//va etre traitee
 					H.opposite.face.tag = 1;//vistee
-					H.opposite.face.setEdge(H.opposite);//dit quelle est l'endroit d'entrée
+					H.opposite.face.setEdge(H.opposite);//dit quelle est l'endroit d'entrÃ©e
 				}
 				H = H.next;
 			}
-			if(!cutTree.containsValue(H) && ! cutTree.containsValue(H.opposite)&& H.opposite.face.tag == 0){//pas encore vue et pas coupé
+			if(!cutTree.containsValue(H) && ! cutTree.containsValue(H.opposite)&& H.opposite.face.tag == 0){//pas encore vue et pas coupÃ©
 				queue.add(H.opposite.face);//va etre traitee
 				H.opposite.face.tag = 1;
-				H.opposite.face.setEdge(H.opposite);//dit quelle est l'endroit d'entrée 
+				H.opposite.face.setEdge(H.opposite);//dit quelle est l'endroit d'entrÃ©e 
 			}
 		}
-		//parcours contient l'ordre dans lequel il faut découper les faces
-		Hashtable<Halfedge<Point_3>, Halfedge<Point_2>> plani = new Hashtable<Halfedge<Point_3>, Halfedge<Point_2>>();
+		//parcours contient l'ordre dans lequel il faut dÃ©couper les faces
+		this.plani = new Hashtable<Halfedge<Point_3>, Halfedge<Point_2>>();
 		
 		this.M = new Polyhedron_3<Point_2>();
-		//traite à part la première face
+		//traite Ã  part la premiÃ¨re face
 		this.firstTo2D(parcours.removeFirst(),plani);
 		System.out.println(this.M.facesToString());
 		
@@ -130,12 +132,12 @@ public class Unfold {
 
 	}
 	
-	/*agit sur this, met la face f dans le mesh 2D. Se repère dans le mesh existant grace à la table de hachage7
+	/*agit sur this, met la face f dans le mesh 2D. Se repÃ¨re dans le mesh existant grace Ã  la table de hachage7
 	 * plani qui note le lien entre les Halfedge 2D et 3D.*/
 	public void to2D(Face<Point_3> f, Hashtable<Halfedge<Point_3>, Halfedge<Point_2>> plani){
 		
 	}
-	 /*cas particulier pour la premiere face à ajouter*/
+	 /*cas particulier pour la premiere face Ã  ajouter*/
 	public void firstTo2D(Face<Point_3> f, Hashtable<Halfedge<Point_3>, Halfedge<Point_2>> plani){
 		Point_3 pp1,pp2,pp3; Point_2 p1,p2,p3;
 		pp1 = f.getEdge().vertex.getPoint();
@@ -160,8 +162,8 @@ public class Unfold {
 		Halfedge<Point_3> H = f.getEdge();
 		H = H.next; H = H.next;
 		while(H != f.getEdge()){
-			Point_3 pp = H.vertex.getPoint(); //point à ajouter au mesh
-			Point_2 p;//point à calculer en 2D, connaissant le hlafedge precedent H.previous
+			Point_3 pp = H.vertex.getPoint(); //point Ã  ajouter au mesh
+			Point_2 p;//point Ã  calculer en 2D, connaissant le hlafedge precedent H.previous
 			
 			H = H.next;
 			//ne pas oublier le hasmap
