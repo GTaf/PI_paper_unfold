@@ -9,7 +9,7 @@ import tc.TC;
 public class Unfold {
 	private Polyhedron_3<Point_2> M; // Patron du polyedre
 	private Polyhedron_3<Point_3> S; // Polyedre original
-	private Hashtable<Halfedge<Point_3>, Halfedge<Point_2>> plani ; //corrélation entre S et M
+	private Hashtable<Halfedge<Point_2>, Halfedge<Point_3>> plani ; //corrélation entre S et M
 
 		
 	public Unfold(String fichier) {
@@ -45,8 +45,8 @@ public class Unfold {
 			TC.println(S);
 		}
 		TC.ecritureDansNouveauFichier("correspondance.off");
-		for (int i = 0; i< M.vertices.size();i++){
-			TC.println(this.plani.
+		for (h in M.vertices){
+			TC.println(this.plani.getvalue(h.Halfedge());
 		}
 
 	}	
@@ -124,7 +124,7 @@ public class Unfold {
 			}
 		}
 		//parcours contient l'ordre dans lequel il faut découper les faces
-		this.plani = new Hashtable<Halfedge<Point_3>, Halfedge<Point_2>>();
+		this.plani = new Hashtable<Halfedge<Point_2>, Halfedge<Point_3>>();
 		
 		this.M = new Polyhedron_3<Point_2>();
 		//traite à part la première face
