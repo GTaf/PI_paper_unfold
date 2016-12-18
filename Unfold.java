@@ -24,7 +24,7 @@ public class Unfold {
 		ShowPlanarUnfolding.draw2D("2dmesh.off");
 	}
 	
-	/* Put a 2D mesh into an OFF file format */
+	/* Put a 2D mesh into an OFF file format and compute the correspondance betwenn vertices from S and M into an OFF file*/
 	public void Mesh2DToOff() {
 		this.computeM();//compute the unfolding
 		resetTag2D(this.M);
@@ -44,6 +44,11 @@ public class Unfold {
 			for(int c : t) S = S+" "+c;//ajoute les numero des sommets
 			TC.println(S);
 		}
+		TC.ecritureDansNouveauFichier("correspondance.off");
+		for (int i = 0; i< M.vertices.size();i++){
+			TC.println(this.plani.
+		}
+
 	}	
 	
 	/*computing the unfolding M given the mesh S of the unfold instance*/
