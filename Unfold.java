@@ -13,6 +13,37 @@ public class Unfold {
 	public Unfold(String fichier) {
 		this.S = MeshLoader.getSurfaceMesh(fichier);
 	}
+	
+	public static void main(String[] args) {
+		Unfold U = new Unfold("OFF/octagon.off");
+
+		// mettre dans le OFF
+		U.Mesh2DToOff();
+		ShowPlanarUnfolding.draw2D("2dmesh.off");
+	}
+	
+	/* Put a 2D mesh into an OFF file format */
+	public void Mesh2DToOff() {
+		this.computeM();//compute the unfolding
+		resetTag2D(this.M);
+		resetIndex2D(this.M);
+
+		TC.ecritureDansNouveauFichier("2dmesh.off");
+		TC.println("OFF");//premiere ligne
+		TC.println(this.M.vertices.size()+" "+this.M.facets.size()+" 0");//nombre de trucs
+		int i = 0;
+		for(Vertex<Point_2> v : M.vertices){//ajoute les points et leur donne un index
+			v.index = ++i;
+			TC.println(v.getPoint().x+" "+v.getPoint().y+" 0.000000");
+		}
+		for(Face<Point_2> f : M.facets){//ajoute les faces et leur points
+			String S = ""+f.degree();
+			int[] t = f.getVertexIndices(this.M);//tableau des index
+			for(int c : t) S = S+" "+c;//ajoute les numero des sommets
+			TC.println(S);
+		}
+	}	
+	
 	/*computing the unfolding M given the mesh S of the unfold instance*/
 	public void computeM() {
 		// creer le cut tree
@@ -59,7 +90,7 @@ public class Unfold {
 
 	/* Cut the mesh according to the cut Tree given TO BE COMPLETED*/
 
-	public Polyhedron_3<Point_2> cutMesh(Hashtable<Integer, Halfedge<Point_3>> cutTree) {
+	public void cutMesh(Hashtable<Integer, Halfedge<Point_3>> cutTree) {
 		resetTag3D(this.S);//aucune face visitée
 		LinkedList<Face<Point_3>> parcours = new LinkedList<Face<Point_3>>();
 		
@@ -91,14 +122,12 @@ public class Unfold {
 		this.M = new Polyhedron_3<Point_2>();
 		//traite à part la première face
 		this.firstTo2D(parcours.removeFirst(),plani);
-		System.out.println(this.M.toString());
+		System.out.println(this.M.facesToString());
 		
 		for(Face<Point_3> f : parcours){
 			this.to2D(f,plani);
 		}
-		
-		
-		return null;
+
 	}
 	
 	/*agit sur this, met la face f dans le mesh 2D. Se repère dans le mesh existant grace à la table de hachage7
@@ -140,28 +169,7 @@ public class Unfold {
 	}
 	
 
-	/* Put a 2D mesh into an OFF file format */
-	public void Mesh2DToOff() {
-		this.computeM();//compute the unfolding
-		resetTag2D(this.M);
-		resetIndex2D(this.M);
-
-		TC.ecritureDansNouveauFichier("2dmesh.off");
-		TC.println("OFF");//premiere ligne
-		TC.println(this.M.vertices.size()+" "+this.M.facets.size()+" 0");//nombre de trucs
-		int i = 0;
-		for(Vertex<Point_2> v : M.vertices){//ajoute les points et leur donne un index
-			v.index = i++;
-			TC.println(v.getPoint().x+" "+v.getPoint().y+" 0.000000");
-		}
-		for(Face<Point_2> f : M.facets){//ajoute les faces et leur points
-			String S = ""+f.degree();
-			int[] t = f.getVertexIndices(this.M);//tableau des index
-			for(int c : t) S = S+" "+c;//ajoute les numero des sommets
-			TC.println(S);
-		}
-
-	}
+	
 
 	/* Reset all the tags to 0 for a new use of tags, 3D mesh */
 	public static void resetTag3D(Polyhedron_3<Point_3> S) {
@@ -199,11 +207,6 @@ public class Unfold {
 		}
 	}
 
-	public static void main(String[] args) {
-		Unfold U = new Unfold("OFF/octagon.off");
-
-		// mettre dans le OFF
-		U.Mesh2DToOff();
-	}
+	
 
 }
