@@ -45,7 +45,7 @@ public class Unfold {
 			TC.println(S);
 		}
 		TC.ecritureDansNouveauFichier("correspondance.off");
-		for (h in M.vertices){
+		for (h in M.vertices()){
 			TC.println(this.plani.getvalue(h.Halfedge());
 		}
 
