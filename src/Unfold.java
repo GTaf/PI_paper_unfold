@@ -57,7 +57,7 @@ public class Unfold {
         // creer le cut tree
         Hashtable<Integer, Halfedge<Point_3>> cutTree = computeCutTree(this.S);
 
-        // couper le mesh et le mettre a�  plat
+        // couper le mesh et le mettre a  plat
         this.cutMesh(cutTree);
     }
 
@@ -67,7 +67,7 @@ public class Unfold {
         Hashtable<Integer, Halfedge<Point_3>> ht = new Hashtable<Integer, Halfedge<Point_3>>();
         LinkedList<Vertex<Point_3>> queue = new LinkedList<Vertex<Point_3>>();
 
-        resetTag3D(S); // met les tags a�  0 : pas encore visite
+        resetTag3D(S); // met les tags a  0 : pas encore visite
 
         if (S.vertices.size() == 0)
             return null;
@@ -87,7 +87,7 @@ public class Unfold {
                     //result.add(H.opposite);
                     ht.put(H.opposite.hashCode(), H.opposite);
                     H.face.tag = 1;
-                    H.opposite.vertex.tag = 1;// va Ãªtre traitÃ©
+                    H.opposite.vertex.tag = 1;// va etre traite
                     queue.addLast(H.opposite.vertex);// addFirst pour DFS
                 }
                 H = H.next.opposite;
@@ -164,7 +164,7 @@ public class Unfold {
         }
 
         Halfedge<Point_3> H = f.getEdge();
-        H = H.next.next.next; //va au sommet non trait�
+        H = H.next.next.next; //va au sommet non traite
         this.M.facets.get(0).setEdge(this.M.facets.get(0).getEdge().next);//change le edge de r�f�rence
         System.out.println(f.degree());
         System.out.println(f);
@@ -288,11 +288,11 @@ public class Unfold {
     }
 
 
-    public void splitEdge(Halfedge<Point_2> h, Point_2 point){
+    private void splitEdge(Halfedge<Point_2> h, Point_2 point){
         // create the new edges, faces and vertex to be added
-        Halfedge<Point_2> hNewLeft=new Halfedge<Point_2>();
-        Halfedge<Point_2> hNewRight=new Halfedge<Point_2>();
-        Vertex<Point_2> newVertex=new Vertex<Point_2>(point);
+        Halfedge<Point_2> hNewLeft=new Halfedge<>();
+        Halfedge<Point_2> hNewRight=new Halfedge<>();
+        Vertex<Point_2> newVertex= new Vertex<>(point);
 
         // set the vertex incidence relations
         newVertex.setEdge(hNewLeft);
