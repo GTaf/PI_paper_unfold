@@ -48,7 +48,7 @@ public class Unfold {
 		}
 		TC.ecritureDansNouveauFichier("correspondance.off");
 		for (Vertex<Point_2> v : M.vertices){
-			TC.println(this.plani.get(v.getHalfedge()));//regarde ce que tu veux faire
+			TC.println(this.plani.get(v.getHalfedge()).vertex.index);
 		}
 
 	}	
@@ -244,9 +244,11 @@ public class Unfold {
 			Halfedge<Point_2> h = v.getHalfedge();
 			Halfedge<Point_2> H = h.next;
 			
+			//cas initial à traiter
 			while ( H != h ) {
 				if ( H.tag == 0){
 					//vérifier la longueur du segment entre v et H.vertex()
+					
 					H.tag=1;
 					H.opposite.tag=1; //avoid checking a length twice
 				}
