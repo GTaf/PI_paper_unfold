@@ -1,7 +1,3 @@
-/**
- * Created by Marion letilly on 20/12/2016.
- */
-
 import java.util.*;
 
 import Jcg.geometry.*;
@@ -51,7 +47,7 @@ public class Unfold {
         }
         TC.ecritureDansNouveauFichier("correspondance.off");
         for (Vertex<Point_2> v : M.vertices){
-            TC.println(this.plani.get(v.getHalfedge()).vertex.index);
+            //TC.println(this.plani.get(v.getHalfedge()).vertex.index);
         }
 
     }
