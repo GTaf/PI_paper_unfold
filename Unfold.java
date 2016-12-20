@@ -10,7 +10,7 @@ public class Unfold {
 	private Polyhedron_3<Point_2> M; // Patron du polyedre
 	private Polyhedron_3<Point_3> S; // Polyedre original
 	private Hashtable<Halfedge<Point_2>, Halfedge<Point_3>> plani ; //correlation entre S et M
-	private float espilon ; //numeric tolerance
+	private float epsilon ; //numeric tolerance
 
 		
 	public Unfold(String fichier) {
@@ -251,7 +251,7 @@ public class Unfold {
 			for (int i = 0 ; i < v.index + 1 ; i++ ){
 				s1=TC.readInt("correspondance.OFF");
 			}
-			Vertex<Point_3> vS = S.get(s1);
+			Vertex<Point_3> vS = this.S.get(s1);
 			
 			//cas initial
 			if ( H.tag == 0){
@@ -259,8 +259,8 @@ public class Unfold {
 				for (int i = 0 ; i < H.vertex.index + 1 ; i++ ){
 					s2=TC.readInt("correspondance.OFF");
 				}
-				Vertex<Point_3> HS = S.get(s2);
-				if (Math.abs(v.squareDistance(H.vertex) - vS.squareDistance(HS))>espsilon)
+				Vertex<Point_3> HS = this.S.get(s2);
+				if (Math.abs(v.squareDistance(H.vertex) - vS.squareDistance(HS))>this.epsilon)
 					return false;
 				H.tag=1;
 				H.opposite.tag=1; //avoid checking a length twice
@@ -274,7 +274,7 @@ public class Unfold {
 						s2=TC.readInt("correspondance.OFF");
 					}
 					Vertex<Point_3> HS = S.get(s2);
-					if (v.squareDistance(H.vertex) != vS.squareDistance(HS))
+					if (Math.abs(v.squareDistance(H.vertex) - vS.squareDistance(HS))>this.epsilon)
 						return false;
 					H.tag=1;
 					H.opposite.tag=1; //avoid checking a length twice
