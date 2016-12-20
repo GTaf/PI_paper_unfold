@@ -237,18 +237,45 @@ public class Unfold {
 	
 	
 	/*Check the isometry of the unfolding*/
+	/*en gros, je vais pour chaque noeud, je regarde la distance de toutes ses arretes
+	 * pour chaque arête, je vais chercher le sommet correspondant dans S
+	 * si la distance est fausse, je  sors
+	 * sinon je traite tout*/
 	public boolean isIsometric(){
 		resetTag2D(this.M);
 		
 		for (Vertex<Point_2> v : this.M.vertices ){
 			Halfedge<Point_2> h = v.getHalfedge();
 			Halfedge<Point_2> H = h.next;
+			int s1; //index of the corresponding vertex in S
+			for (int i = 0 ; i < v.index + 1 ; i++ ){
+				s1=TC.readInt("correspondance.OFF");
+			}
+			Vertex<Point_3> vS = S.get(s1);
 			
-			//cas initial à traiter
+			//cas initial
+			if ( H.tag == 0){
+				int s2; 
+				for (int i = 0 ; i < H.vertex.index + 1 ; i++ ){
+					s2=TC.readInt("correspondance.OFF");
+				}
+				Vertex<Point_3> HS = S.get(s2);
+				if (Math.abs(v.squareDistance(H.vertex) - vS.squareDistance(HS))>espsilon)
+					return false;
+				H.tag=1;
+				H.opposite.tag=1; //avoid checking a length twice
+				H=H.opposite.next;
+
+			
 			while ( H != h ) {
 				if ( H.tag == 0){
-					//vérifier la longueur du segment entre v et H.vertex()
-					
+					int s2; 
+					for (int i = 0 ; i < H.vertex.index + 1 ; i++ ){
+						s2=TC.readInt("correspondance.OFF");
+					}
+					Vertex<Point_3> HS = S.get(s2);
+					if (v.squareDistance(H.vertex) != vS.squareDistance(HS))
+						return false;
 					H.tag=1;
 					H.opposite.tag=1; //avoid checking a length twice
 				}
@@ -257,7 +284,7 @@ public class Unfold {
 			
 		}
 		
-		return true;
+		return true;//each edges has been checked
 	}
 	
 	public void splitEdge(Halfedge<Point_2> h, Point_2 point){
