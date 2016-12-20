@@ -265,8 +265,7 @@ public class Unfold {
 				H.tag=1;
 				H.opposite.tag=1; //avoid checking a length twice
 				H=H.opposite.next;
-
-			
+			}
 			while ( H != h ) {
 				if ( H.tag == 0){
 					int s2; 
@@ -281,11 +280,12 @@ public class Unfold {
 				}
 				H=H.opposite.next;
 			}	
-			
 		}
+	}
 		
 		return true;//each edges has been checked
-	}
+		}
+		
 	
 	public void splitEdge(Halfedge<Point_2> h, Point_2 point){
 		// create the new edges, faces and vertex to be added
