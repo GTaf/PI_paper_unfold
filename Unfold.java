@@ -10,6 +10,7 @@ public class Unfold {
 	private Polyhedron_3<Point_2> M; // Patron du polyedre
 	private Polyhedron_3<Point_3> S; // Polyedre original
 	private Hashtable<Halfedge<Point_2>, Halfedge<Point_3>> plani ; //corrÃ©lation entre S et M
+	private float espilon ; //numeric tolerance
 
 		
 	public Unfold(String fichier) {
@@ -205,13 +206,43 @@ public class Unfold {
 	}
 
 	/* Reset all Indexes for a 2D Mesh */
-	public static void resetIndex2D(Polyhedron_3<Point_2> S) {
-		for (Halfedge<Point_2> h : S.halfedges) {
+	public static void resetIndex2D(Polyhedron_3<Point_2> M) {
+		for (Halfedge<Point_2> h : M.halfedges) {
 			h.index = 0;
 		}
-		for (Vertex<Point_2> v : S.vertices) {
+		for (Vertex<Point_2> v : M.vertices) {
 			v.index = -1;
 		}
+	}
+	
+	
+	
+	/*Check combinatorial validity*/
+	public boolean isValid(){
+		return this.M.isValid(); //version je m'emmerde pas
+	}
+	
+	
+	/*Check the isometry of the unfolding*/
+	public boolean isIsometric(){
+		resetTag2D(this.M);
+		
+		for (v in this.M.vertices ){
+			Halfedge<Point_3> h = v.getHalfedge();
+			Halfedge<Point_3> H = h.next();
+			
+			while ( H != h ) {
+				if ( H.tag == 0){
+					//vérifier la longueur du segment entre v et H.vertex()
+					H.tag=1;
+					H.opposite.tag=1; //avoid checking a length twice
+				}
+				H=H.opposite.next;
+			}	
+			
+		}
+		
+		return true;
 	}
 
 	
