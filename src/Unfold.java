@@ -17,12 +17,11 @@ public class Unfold {
     }
 
     public static void main(String[] args) {
-        Unfold U = new Unfold("OFF/cube_trunc.off");
+        Unfold U = new Unfold("OFF/bevel_cube.off");
 
         // mettre dans le OFF
         U.Mesh2DToOff();
-        //System.out.println(U.M.edgesToString());
-        ShowPlanarUnfolding.draw2D("2dmesh.off"); // j'ai une erreur sur ShowPlanarUnfolding
+        ShowPlanarUnfolding.draw2D("2dmesh.off"); 
     }
 
     /* Put a 2D mesh into an OFF file format and compute the correspondance betwenn vertices from S and M into an OFF file*/
@@ -63,7 +62,6 @@ public class Unfold {
 
     /* Compute BFS or DFS cut tree */
     private static Hashtable<Integer, Halfedge<Point_3>> computeCutTree(Polyhedron_3<Point_3> S) {
-        //LinkedList<Halfedge<Point_3>> result = new LinkedList<Halfedge<Point_3>>();
         Hashtable<Integer, Halfedge<Point_3>> ht = new Hashtable<Integer, Halfedge<Point_3>>();
         LinkedList<Vertex<Point_3>> queue = new LinkedList<Vertex<Point_3>>();
 
@@ -134,15 +132,15 @@ public class Unfold {
         this.firstTo2D(parcours.removeFirst(),plani);
 
         
-        /*for(Face<Point_3> f : parcours){
-            //this.to2D(f,plani);
-            System.out.println(f.getEdge());
-        }*/
-        
-        for(int i = 0; i <5;i++){
-        	this.to2D(parcours.get(i), plani);
-        	System.out.println("Face n"+(i+1)+" : "+parcours.get(i));
+        for(Face<Point_3> f : parcours){
+            this.to2D(f,plani);
+            //System.out.println(f.getEdge());
         }
+        /*
+        for(int i = 0; i <6;i++){
+        	this.to2D(parcours.get(i), plani);
+        	//System.out.println("Face n"+(i+1)+" : "+parcours.get(i));
+        }*/
         
         //plani.values();
         
@@ -174,7 +172,7 @@ public class Unfold {
         p3 = new Point_2(Math.cos(teta)*(double)pp3.distanceFrom(pp1), Math.sin(teta)*(double)pp3.distanceFrom(pp1));
         p3.translateOf(p1.minus(new Point_2(0,0)).opposite());
         Halfedge<Point_2> h = plani.get(f.getEdge().getOpposite()).getOpposite();//celui de la face traitée
-        System.out.println(h);
+        System.out.println("\n"+ h);
         System.out.println(h);
         this.M.addTriangleToBorder(h,p3);
         //ajouter hachage
