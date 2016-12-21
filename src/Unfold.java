@@ -10,6 +10,7 @@ public class Unfold {
     private Polyhedron_3<Point_3> S; // Polyedre original
     private DoubleHashMap plani ; //correlation entre S et M
     private float epsilon ; //numeric tolerance
+    private boolean BFS;
 
 
     private Unfold(String fichier) {
@@ -17,8 +18,8 @@ public class Unfold {
     }
 
     public static void main(String[] args) {
-        Unfold U = new Unfold("OFF/bevel_cube.off");
-
+        Unfold U = new Unfold("OFF/star.off");
+        U.BFS = true;
         // mettre dans le OFF
         U.Mesh2DToOff();
         ShowPlanarUnfolding.draw2D("2dmesh.off"); 
@@ -54,24 +55,24 @@ public class Unfold {
     /*computing the unfolding M given the mesh S of the unfold instance*/
     private void computeM() {
         // creer le cut tree
-        Hashtable<Integer, Halfedge<Point_3>> cutTree = computeCutTree(this.S);
+        Hashtable<Integer, Halfedge<Point_3>> cutTree = this.computeCutTree();
 
         // couper le mesh et le mettre a  plat
         this.cutMesh(cutTree);
     }
 
     /* Compute BFS or DFS cut tree */
-    private static Hashtable<Integer, Halfedge<Point_3>> computeCutTree(Polyhedron_3<Point_3> S) {
+    private Hashtable<Integer, Halfedge<Point_3>> computeCutTree() {
         Hashtable<Integer, Halfedge<Point_3>> ht = new Hashtable<Integer, Halfedge<Point_3>>();
         LinkedList<Vertex<Point_3>> queue = new LinkedList<Vertex<Point_3>>();
 
-        resetTag3D(S); // met les tags a  0 : pas encore visite
+        resetTag3D(this.S); // met les tags a  0 : pas encore visite
 
-        if (S.vertices.size() == 0)
+        if (this.S.vertices.size() == 0)
             return null;
 
 
-        queue.addFirst(S.vertices.get(0)); // ajout initial du premier halfedge
+        queue.addFirst(this.S.vertices.get(0)); // ajout initial du premier halfedge
         // dans queue
         // ajoute les voisins
         while (!queue.isEmpty()) {
@@ -86,7 +87,10 @@ public class Unfold {
                     ht.put(H.opposite.hashCode(), H.opposite);
                     H.face.tag = 1;
                     H.opposite.vertex.tag = 1;// va etre traite
-                    queue.addLast(H.opposite.vertex);// addFirst pour DFS
+                    if(this.BFS)//BFS ou DFS
+                    	queue.addLast(H.opposite.vertex);
+                    else
+                    	queue.addFirst(H.opposite.vertex);
                 }
                 H = H.next.opposite;
             }
@@ -94,7 +98,7 @@ public class Unfold {
         return ht;
     }
 
-	/* Cut the mesh according to the cut Tree given TO BE COMPLETED*/
+	/* Cut the mesh according to the cut Tree given DONE*/
 
     public void cutMesh(Hashtable<Integer, Halfedge<Point_3>> cutTree) {
         resetTag3D(this.S);//aucune face visitée
