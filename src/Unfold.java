@@ -8,11 +8,11 @@ import tc.TC;
 public class Unfold {
     private Polyhedron_3<Point_2> M; // Patron du polyedre
     private Polyhedron_3<Point_3> S; // Polyedre original
-    private Hashtable<Halfedge<Point_2>, Halfedge<Point_3>> plani ; //correlation entre S et M
+    private DoubleHashMap plani ; //correlation entre S et M
     private float epsilon ; //numeric tolerance
 
 
-    public Unfold(String fichier) {
+    private Unfold(String fichier) {
         this.S = MeshLoader.getSurfaceMesh(fichier);
     }
 
@@ -21,12 +21,12 @@ public class Unfold {
 
         // mettre dans le OFF
         U.Mesh2DToOff();
-        System.out.println(U.M.edgesToString());
+        //System.out.println(U.M.edgesToString());
         ShowPlanarUnfolding.draw2D("2dmesh.off"); // j'ai une erreur sur ShowPlanarUnfolding
     }
 
     /* Put a 2D mesh into an OFF file format and compute the correspondance betwenn vertices from S and M into an OFF file*/
-    public void Mesh2DToOff() {
+    private void Mesh2DToOff() {
         this.computeM();//compute the unfolding
         resetTag2D(this.M);
         resetIndex2D(this.M);
@@ -53,7 +53,7 @@ public class Unfold {
     }
 
     /*computing the unfolding M given the mesh S of the unfold instance*/
-    public void computeM() {
+    private void computeM() {
         // creer le cut tree
         Hashtable<Integer, Halfedge<Point_3>> cutTree = computeCutTree(this.S);
 
@@ -62,7 +62,7 @@ public class Unfold {
     }
 
     /* Compute BFS or DFS cut tree */
-    public static Hashtable<Integer, Halfedge<Point_3>> computeCutTree(Polyhedron_3<Point_3> S) {
+    private static Hashtable<Integer, Halfedge<Point_3>> computeCutTree(Polyhedron_3<Point_3> S) {
         //LinkedList<Halfedge<Point_3>> result = new LinkedList<Halfedge<Point_3>>();
         Hashtable<Integer, Halfedge<Point_3>> ht = new Hashtable<Integer, Halfedge<Point_3>>();
         LinkedList<Vertex<Point_3>> queue = new LinkedList<Vertex<Point_3>>();
@@ -125,26 +125,99 @@ public class Unfold {
             }
         }
         //parcours contient l'ordre dans lequel il faut découper les faces
-        this.plani = new Hashtable<Halfedge<Point_2>, Halfedge<Point_3>>();
+        this.plani = new DoubleHashMap();
+        System.out.println(parcours);
 
         this.M = new Polyhedron_3<Point_2>();
-        //traite �  part la première face
+        //traite  part la première face
+        System.out.println("Face n0 : "+parcours.getFirst());
         this.firstTo2D(parcours.removeFirst(),plani);
 
-
-        for(Face<Point_3> f : parcours){
-            this.to2D(f,plani);
+        
+        /*for(Face<Point_3> f : parcours){
+            //this.to2D(f,plani);
+            System.out.println(f.getEdge());
+        }*/
+        
+        for(int i = 0; i <5;i++){
+        	this.to2D(parcours.get(i), plani);
+        	System.out.println("Face n"+(i+1)+" : "+parcours.get(i));
         }
+        
+        //plani.values();
+        
+        
 
     }
 
-    /*agit sur this, met la face f dans le mesh 2D. Se repère dans le mesh existant grace �  la table de hachage7
+    /*agit sur this, met la face f dans le mesh 2D. Se repère dans le mesh existant grace a  la table de hachage7
      * plani qui note le lien entre les Halfedge 2D et 3D.*/
-    public void to2D(Face<Point_3> f, Hashtable<Halfedge<Point_2>, Halfedge<Point_3>> plani){
+    public void to2D(Face<Point_3> f, DoubleHashMap<Halfedge<Point_2> ,Halfedge<Point_3>> plani){
+        Point_3 pp1,pp2,pp3; Point_2 p1,p2,p3;
+        pp1 = f.getEdge().prev.vertex.getPoint();
+        pp2 = f.getEdge().vertex.getPoint();
+        pp3 = f.getEdge().next.vertex.getPoint();
 
+        //calcul de l'angle du halfedge de référence psi
+        p1 = plani.get(f.getEdge().getOpposite()).getVertex().getPoint();
+        p2 = plani.get(f.getEdge().getOpposite()).getOpposite().getVertex().getPoint();
+        double psi = Math.acos(costeta(p1,p2,new Point_2(p1.x+1.0,p1.y)));
+        if((double)p1.minus(p2).getCartesian(1)<0) psi=-psi;
+        //System.out.println(p1.minus(p2).getCartesian(1));
+
+        //calcul des points
+        //premier point
+        double teta = Math.acos(costeta(pp1,pp2,pp3));
+        teta = teta+psi;
+        //System.out.println("tetat : "+teta+"    psi : "+psi+"     teta"+(teta-psi));
+        //System.out.println(p1+"           "+p2);
+        p3 = new Point_2(Math.cos(teta)*(double)pp3.distanceFrom(pp1), Math.sin(teta)*(double)pp3.distanceFrom(pp1));
+        p3.translateOf(p1.minus(new Point_2(0,0)).opposite());
+        Halfedge<Point_2> h = plani.get(f.getEdge().getOpposite()).getOpposite();//celui de la face trait�e
+        System.out.println(h);
+        System.out.println(h);
+        this.M.addTriangleToBorder(h,p3);
+        //ajouter hachage
+        plani.put(h, f.getEdge());
+        plani.put(h.next, f.getEdge().next);
+        plani.put(h.next.next, f.getEdge().next.next);
+                
+        //autres points
+        Halfedge<Point_3> H = f.getEdge();
+        H = H.next.next; //va au sommet non traite
+        System.out.println("H : "+H);
+        
+        Face<Point_2> F =plani.get(f.getEdge().getOpposite()).getOpposite().getFace();//face 2D
+        //System.out.println(F+"           "+F.getEdge());
+        
+        
+        F.setEdge(F.getEdge().next);//change le edge de reference
+        //System.out.println(F+"           "+F.getEdge());
+        
+        
+        //this.Mesh2DToOff2();
+        //System.out.println(U.M.edgesToString());
+        //ShowPlanarUnfolding.draw2D("2dmesh.off");
+        
+        while(H.next != f.getEdge()){
+            Point_3 pp = H.vertex.getPoint(); //point �  ajouter au mesh
+            System.out.println(pp1);
+            double d = (double)pp.distanceFrom(pp1);//distance entre p et l'origine
+            teta = Math.acos(costeta(pp1,pp2,pp));
+            teta = teta+psi;
+            Point_2 p = new Point_2(Math.cos(teta)*d, Math.sin(teta)*d);//point �  calculer en 2D, connaissant le hlafedge precedent H.previous
+            p.translateOf(p1.minus(new Point_2(0,0)).opposite());
+            //System.out.println(F.getEdge());
+            plani.put(this.splitEdge(F.getEdge().prev.prev, p),H);
+
+            H = H.next;
+            //ne pas oublier le hasmap
+        }
+        plani.put(F.getEdge().getPrev().getPrev(),H);
+        
     }
     /*cas particulier pour la premiere face �  ajouter*/
-    public void firstTo2D(Face<Point_3> f, Hashtable<Halfedge<Point_2>, Halfedge<Point_3>> plani){
+    public void firstTo2D(Face<Point_3> f, DoubleHashMap<Halfedge<Point_2> ,Halfedge<Point_3>> plani){
         Point_3 pp1,pp2,pp3; Point_2 p1,p2,p3;
         pp1 = f.getEdge().vertex.getPoint();
         pp2 = f.getEdge().next.vertex.getPoint();
@@ -157,7 +230,7 @@ public class Unfold {
         //remplir la table de hachage
         Halfedge<Point_2> h = this.M.facets.get(0).getEdge();
         for(int i = 0; i <3; i++){
-            if (h.vertex.getPoint().x==0 && h.vertex.getPoint().y == 0) plani.put(h,f.getEdge());
+            if (h.vertex.getPoint().x==0 && h.vertex.getPoint().y == 0); //plani.put(h,f.getEdge());
             else if (h.vertex.getPoint().y == 0) plani.put(h, f.getEdge().next);
             else plani.put(h,f.getEdge().next.next);
             h=h.next;
@@ -165,23 +238,27 @@ public class Unfold {
 
         Halfedge<Point_3> H = f.getEdge();
         H = H.next.next.next; //va au sommet non traite
-        this.M.facets.get(0).setEdge(this.M.facets.get(0).getEdge().next);//change le edge de r�f�rence
-        System.out.println(f.degree());
-        System.out.println(f);
+        this.M.facets.get(0).setEdge(this.M.facets.get(0).getEdge().next);//change le edge de reference
 
         while(H != f.getEdge()){
             Point_3 pp = H.vertex.getPoint(); //point �  ajouter au mesh
             double d = (double)pp.distanceFrom(pp1);//distance entre p et l'origine
             Point_2 p = new Point_2(costeta(pp1,pp2,pp)*d, sinteta(pp1,pp2,pp)*d);//point �  calculer en 2D, connaissant le hlafedge precedent H.previous
-
-            this.splitEdge(this.M.facets.get(0).getEdge().prev, p);
+            plani.put(this.splitEdge(this.M.facets.get(0).getEdge().prev, p),H);
 
             H = H.next;
             //ne pas oublier le hasmap
         }
+        plani.put(this.M.facets.get(0).getEdge().getPrev(),H);
     }
+
+
     /*cos de l'angle entre pp1 pp2 et pp1 pp3*/
     public static double costeta(Point_3 pp1, Point_3 pp2, Point_3 pp3){
+        return((double)pp2.minus(pp1).innerProduct(pp3.minus(pp1)))/((double)pp2.distanceFrom(pp1)*(double)pp3.distanceFrom(pp1));
+    }
+
+    public static double costeta(Point_2 pp1, Point_2 pp2, Point_2 pp3){
         return((double)pp2.minus(pp1).innerProduct(pp3.minus(pp1)))/((double)pp2.distanceFrom(pp1)*(double)pp3.distanceFrom(pp1));
     }
     /*cos de l'angle entre pp1 pp2 et pp1 pp3*/
@@ -288,7 +365,7 @@ public class Unfold {
     }
 
 
-    private void splitEdge(Halfedge<Point_2> h, Point_2 point){
+    private Halfedge<Point_2> splitEdge(Halfedge<Point_2> h, Point_2 point){
         // create the new edges, faces and vertex to be added
         Halfedge<Point_2> hNewLeft=new Halfedge<>();
         Halfedge<Point_2> hNewRight=new Halfedge<>();
@@ -327,7 +404,35 @@ public class Unfold {
         this.M.halfedges.add(hNewLeft);
         this.M.halfedges.add(hNewRight);
 
-        //return hNewLeft;
+        return hNewLeft;
+    }
+    
+    
+    
+    /* Put a 2D mesh into an OFF file format and compute the correspondance betwenn vertices from S and M into an OFF file*/
+    private void Mesh2DToOff2() {
+        resetTag2D(this.M);
+        resetIndex2D(this.M);
+
+        TC.ecritureDansNouveauFichier("2dmesh.off");
+        TC.println("OFF");//premiere ligne
+        TC.println(this.M.vertices.size()+" "+this.M.facets.size()+" 0");//nombre de trucs
+        int i = 0;
+        for(Vertex<Point_2> v : M.vertices){//ajoute les points et leur donne un index
+            v.index = ++i;
+            TC.println(v.getPoint().x+" "+v.getPoint().y+" 0.000000");
+        }
+        for(Face<Point_2> f : M.facets){//ajoute les faces et leur points
+            String S = ""+f.degree();
+            int[] t = f.getVertexIndices(this.M);//tableau des index
+            for(int c : t) S = S+" "+c;//ajoute les numero des sommets
+            TC.println(S);
+        }
+        TC.ecritureDansNouveauFichier("correspondance.off");
+        for (Vertex<Point_2> v : M.vertices){
+            //TC.println(this.plani.get(v.getHalfedge()).vertex.index);
+        }
+
     }
 
 
