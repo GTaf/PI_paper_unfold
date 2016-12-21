@@ -15,11 +15,11 @@ public class Unfold {
 
     private Unfold(String fichier) {
         this.S = MeshLoader.getSurfaceMesh(fichier);
+        this.BFS = true;
     }
 
     public static void main(String[] args) {
-        Unfold U = new Unfold("OFF/star.off");
-        U.BFS = true;
+        Unfold U = new Unfold("OFF/star.off");   
         // mettre dans le OFF
         U.Mesh2DToOff();
         ShowPlanarUnfolding.draw2D("2dmesh.off"); 
@@ -36,7 +36,7 @@ public class Unfold {
         TC.println(this.M.vertices.size()+" "+this.M.facets.size()+" 0");//nombre de trucs
         int i = 0;
         for(Vertex<Point_2> v : M.vertices){//ajoute les points et leur donne un index
-            v.index = ++i;
+            v.index = i++;
             TC.println(v.getPoint().x+" "+v.getPoint().y+" 0.000000");
         }
         for(Face<Point_2> f : M.facets){//ajoute les faces et leur points
@@ -45,7 +45,7 @@ public class Unfold {
             for(int c : t) S = S+" "+c;//ajoute les numero des sommets
             TC.println(S);
         }
-        TC.ecritureDansNouveauFichier("correspondance.off");
+        TC.ecritureDansNouveauFichier("correspondance.txt");
         for (Vertex<Point_2> v : M.vertices){
             //TC.println(this.plani.get(v.getHalfedge()).vertex.index);
         }
@@ -421,7 +421,7 @@ public class Unfold {
         TC.println(this.M.vertices.size()+" "+this.M.facets.size()+" 0");//nombre de trucs
         int i = 0;
         for(Vertex<Point_2> v : M.vertices){//ajoute les points et leur donne un index
-            v.index = ++i;
+            v.index = i++;
             TC.println(v.getPoint().x+" "+v.getPoint().y+" 0.000000");
         }
         for(Face<Point_2> f : M.facets){//ajoute les faces et leur points
