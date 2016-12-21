@@ -8,21 +8,24 @@ import tc.TC;
 public class Unfold {
     private Polyhedron_3<Point_2> M; // Patron du polyedre
     private Polyhedron_3<Point_3> S; // Polyedre original
-    private DoubleHashMap plani ; //correlation entre S et M
+    private DoubleHashMap<Halfedge<Point_2> ,Halfedge<Point_3>> plani ; //correlation entre S et M
     private float epsilon ; //numeric tolerance
     private boolean BFS;
+    private String filename;
 
 
     private Unfold(String fichier) {
-        this.S = MeshLoader.getSurfaceMesh(fichier);
+    	this.filename = fichier;
+        this.S = MeshLoader.getSurfaceMesh("OFF/"+fichier);
         this.BFS = true;
     }
 
     public static void main(String[] args) {
-        Unfold U = new Unfold("OFF/star.off");   
+    	String filename = "cube.off";
+        Unfold U = new Unfold(filename);   
         // mettre dans le OFF
         U.Mesh2DToOff();
-        ShowPlanarUnfolding.draw2D("2dmesh.off"); 
+        ShowPlanarUnfolding.draw2D("results/2D_"+filename); 
     }
 
     /* Put a 2D mesh into an OFF file format and compute the correspondance betwenn vertices from S and M into an OFF file*/
@@ -31,7 +34,7 @@ public class Unfold {
         resetTag2D(this.M);
         resetIndex2D(this.M);
 
-        TC.ecritureDansNouveauFichier("2dmesh.off");
+        TC.ecritureDansNouveauFichier("results/2D_"+this.filename);
         TC.println("OFF");//premiere ligne
         TC.println(this.M.vertices.size()+" "+this.M.facets.size()+" 0");//nombre de trucs
         int i = 0;
@@ -47,7 +50,7 @@ public class Unfold {
         }
         TC.ecritureDansNouveauFichier("correspondance.txt");
         for (Vertex<Point_2> v : M.vertices){
-            //TC.println(this.plani.get(v.getHalfedge()).vertex.index);
+            //TC.println(this.plani.get2(v.getHalfedge()).vertex.index);
         }
 
     }
@@ -127,7 +130,7 @@ public class Unfold {
             }
         }
         //parcours contient l'ordre dans lequel il faut découper les faces
-        this.plani = new DoubleHashMap();
+        this.plani = new DoubleHashMap<Halfedge<Point_2> ,Halfedge<Point_3>>();
         System.out.println(parcours);
 
         this.M = new Polyhedron_3<Point_2>();
@@ -412,7 +415,7 @@ public class Unfold {
     
     
     /* Put a 2D mesh into an OFF file format and compute the correspondance betwenn vertices from S and M into an OFF file*/
-    private void Mesh2DToOff2() {
+    public void Mesh2DToOff2() {
         resetTag2D(this.M);
         resetIndex2D(this.M);
 
