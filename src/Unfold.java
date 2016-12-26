@@ -250,12 +250,17 @@ public class Unfold {
             if (h.vertex.getPoint().x==0 && h.vertex.getPoint().y == 0)h.vertex.tag = f.getEdge().vertex.index; //plani.put(h,f.getEdge());
             else if (h.vertex.getPoint().y == 0) {
             	plani.put(h, f.getEdge().next);
+            	System.out.println("verif");
             	h.vertex.tag = f.getEdge().next.vertex.index;
+            	System.out.println(h.vertex.tag);
             	System.out.println();}
             else {
             	plani.put(h,f.getEdge().next.next);
+                System.out.println("verif2");
             	h.vertex.tag = f.getEdge().next.next.vertex.index;
-            	}
+                System.out.println(h.vertex.tag);
+
+            }
             
             h=h.next;
         }
@@ -344,7 +349,7 @@ public class Unfold {
     /*Check the isometry of the unfolding*/
     public boolean isIsometric(){
         Polyhedron_3<Point_2> polyhedron2D = MeshLoader.getPlanarMesh("results/2D_"+this.filename);
-        resetTag2D(this.M);
+        resetTag2D(polyhedron2D);
 
         for (Vertex<Point_2> v : polyhedron2D.vertices ){
             Halfedge<Point_2> h = v.getHalfedge();
@@ -359,8 +364,8 @@ public class Unfold {
                     System.out.println("Marion regarde1");
                     System.out.println(v.getPoint());
                     System.out.println(H.vertex.getPoint());
-                    System.out.println(vS.getPoint());
-                    System.out.println(HS.getPoint());
+                    System.out.println(v.tag);
+                    System.out.println(H.vertex.tag);
 
                     return false;
                 }
