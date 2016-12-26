@@ -5,6 +5,8 @@ import Jcg.mesh.MeshLoader;
 import Jcg.polyhedron.*;
 import tc.TC;
 
+import static Jcg.geometry.GeometricOperations_2.doIntersect;
+
 public class Unfold {
     private Polyhedron_3<Point_2> M; // Patron du polyedre
     private Polyhedron_3<Point_3> S; // Polyedre original
@@ -16,8 +18,9 @@ public class Unfold {
 
     private Unfold(String fichier) {
     	this.filename = fichier;
-        this.S = MeshLoader.getSurfaceMesh("OFF/"+fichier);
+        this.S = MeshLoader.getSurfaceMesh("C:\\Users\\Marion letilly\\IdeaProjects\\unfold\\Pi_paper_unfold\\OFF\\"+fichier);
         this.BFS = true;
+        this.epsilon = (float)0.1;
     }
 
     public static void main(String[] args) {
@@ -25,7 +28,11 @@ public class Unfold {
         Unfold U = new Unfold(filename);   
         // mettre dans le OFF
         U.Mesh2DToOff();
-        ShowPlanarUnfolding.draw2D("results/2D_"+filename); 
+        //U.correspondance();
+        ShowPlanarUnfolding.draw2D("results/2D_"+filename);
+        //System.out.println(U.isValid());
+        //System.out.println(U.isIsometric());
+        System.out.println(U.isOverlapping());
     }
 
     /* Put a 2D mesh into an OFF file format and compute the correspondance betwenn vertices from S and M into an OFF file*/
@@ -34,7 +41,7 @@ public class Unfold {
         resetTag2D(this.M);
         resetIndex2D(this.M);
 
-        TC.ecritureDansNouveauFichier("results/2D_"+this.filename);
+        TC.ecritureDansNouveauFichier("C:\\Users\\Marion letilly\\IdeaProjects\\unfold\\Pi_paper_unfold\\results/2D_"+this.filename);
         TC.println("OFF");//premiere ligne
         TC.println(this.M.vertices.size()+" "+this.M.facets.size()+" 0");//nombre de trucs
         int i = 0;
@@ -47,10 +54,6 @@ public class Unfold {
             int[] t = f.getVertexIndices(this.M);//tableau des index
             for(int c : t) S = S+" "+c;//ajoute les numero des sommets
             TC.println(S);
-        }
-        TC.ecritureDansNouveauFichier("correspondance.txt");
-        for (Vertex<Point_2> v : M.vertices){
-            //TC.println(this.plani.get2(v.getHalfedge()).vertex.index);
         }
 
     }
@@ -178,7 +181,7 @@ public class Unfold {
         //System.out.println(p1+"           "+p2);
         p3 = new Point_2(Math.cos(teta)*(double)pp3.distanceFrom(pp1), Math.sin(teta)*(double)pp3.distanceFrom(pp1));
         p3.translateOf(p1.minus(new Point_2(0,0)).opposite());
-        Halfedge<Point_2> h = plani.get(f.getEdge().getOpposite()).getOpposite();//celui de la face traitée
+        Halfedge<Point_2> h = plani.get(f.getEdge().getOpposite()).getOpposite();//celui de la face traitï¿½e
         System.out.println("\n"+ h);
         System.out.println(h);
         this.M.addTriangleToBorder(h,p3);
@@ -324,6 +327,7 @@ public class Unfold {
 	 * sinon je traite tout*/
     public boolean isIsometric(){
         resetTag2D(this.M);
+        this.correspondance();
 
         for (Vertex<Point_2> v : this.M.vertices ){
             Halfedge<Point_2> h = v.getHalfedge();
@@ -368,6 +372,22 @@ public class Unfold {
 
         return true;//each edges has been checked
     }
+
+    /*Check the existence of overlapping edges*/
+    public boolean isOverlapping(){
+        resetTag2D(this.M);
+        for (Halfedge h : M.halfedges){
+            for (Halfedge t : M.halfedges){
+                if (t.tag != 0){
+                    if (doIntersect(new Segment_2((Point_2)h.vertex.getPoint(),(Point_2)h.opposite.vertex.getPoint()), new Segment_2((Point_2)t.vertex.getPoint(),(Point_2)t.opposite.vertex.getPoint())));
+                    return true;
+                }
+            }
+            h.tag=0; //don't check twice
+        }
+        return false;
+    }
+
 
 
     private Halfedge<Point_2> splitEdge(Halfedge<Point_2> h, Point_2 point){
@@ -438,6 +458,13 @@ public class Unfold {
             //TC.println(this.plani.get(v.getHalfedge()).vertex.index);
         }
 
+    }
+
+    public void correspondance(){
+        TC.ecritureDansNouveauFichier("correspondance.off");
+        for (Vertex<Point_2> v : this.M.vertices){
+            TC.println(this.plani.get2(v.getHalfedge()).vertex.index);
+        }
     }
 
 
