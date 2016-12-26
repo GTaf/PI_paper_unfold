@@ -22,7 +22,7 @@ public class Unfold {
     	this.filename = fichier;
         this.S = MeshLoader.getSurfaceMesh("OFF\\"+fichier);
         this.BFS = true;
-        this.epsilon = 1;
+        this.epsilon = (double) 0.55;
     }
 
     public static void main(String[] args) {
@@ -337,53 +337,51 @@ public class Unfold {
     /*Check combinatorial validity*/
     public boolean isValid(){
     	Polyhedron_3<Point_2> polyhedron2D = MeshLoader.getPlanarMesh("results/2D_"+this.filename);
-        return polyhedron2D.isValid(false); //version je m'emmerde pas a voir si on met true ou false
+        return polyhedron2D.isValid(false);
     }
 
 
     /*Check the isometry of the unfolding*/
-	/*en gros, je vais pour chaque noeud, je regarde la distance de toutes ses arretes
-	 * pour chaque ar�te, je vais chercher le sommet correspondant dans S
-	 * si la distance est fausse, je  sors
-	 * sinon je traite tout*/
     public boolean isIsometric(){
+        Polyhedron_3<Point_2> polyhedron2D = MeshLoader.getPlanarMesh("results/2D_"+this.filename);
         resetTag2D(this.M);
-        this.correspondance();
 
-        for (Vertex<Point_2> v : this.M.vertices ){
+        for (Vertex<Point_2> v : polyhedron2D.vertices ){
             Halfedge<Point_2> h = v.getHalfedge();
-            Halfedge<Point_2> H = h.next;
-            int s1 = 0 ; //index of the corresponding vertex in S
-            for (int i = 0 ; i < v.index + 1 ; i++ ){
-                TC.lectureDansFichier("correspondance.off");
-                s1=TC.lireInt();
-            }
-            Vertex<Point_3> vS = this.S.vertices.get(s1);
+            Halfedge<Point_2> H = h.prev;
+            Vertex<Point_3> vS = this.S.vertices.get(v.tag);
 
             //cas initial
-            if ( H.tag == 0){
-                int s2 = 0 ;
-                for (int i = 0 ; i < H.vertex.index + 1 ; i++ ){
-                    TC.lectureDansFichier("correspondance.off");
-                    s2=TC.lireInt();
-                }
-                Vertex<Point_3> HS = this.S.vertices.get(s2);
-                if (Math.abs((double)v.getPoint().distanceFrom(H.vertex.getPoint()) - (double)vS.getPoint().distanceFrom(HS.getPoint()))>this.epsilon)
+            if ( h.tag == 0){
+                Vertex<Point_3> HS = this.S.vertices.get(H.vertex.tag);
+
+                if (Math.abs((double)v.getPoint().distanceFrom(H.vertex.getPoint()) - (double)vS.getPoint().distanceFrom(HS.getPoint()))>this.epsilon) {
+                    System.out.println("Marion regarde1");
+                    System.out.println(v.getPoint());
+                    System.out.println(H.vertex.getPoint());
+                    System.out.println(vS.getPoint());
+                    System.out.println(HS.getPoint());
+
                     return false;
+                }
                 H.tag=1;
                 H.opposite.tag=1; //avoid checking a length twice
-                H=H.opposite.next;
             }
-            while ( H != h ) {
-                if ( H.tag == 0){
-                    int s2 = 0;
-                    for (int i = 0 ; i < H.vertex.index + 1 ; i++ ){
-                        TC.lectureDansFichier("correspondance.off");
-                        s2=TC.lireInt();
-                    }
-                    Vertex<Point_3> HS = S.vertices.get(s2);
-                    if (Math.abs((double)v.getPoint().distanceFrom(H.vertex.getPoint()) - (double)vS.getPoint().distanceFrom(HS.getPoint()))>this.epsilon)
+            H=H.next.next;
+
+            while ( H != h && H != h.opposite) {
+
+                if ( H.tag == 0) {
+                    Vertex<Point_3> HS = S.vertices.get(H.vertex.tag);
+
+                    if (Math.abs((double) v.getPoint().distanceFrom(H.vertex.getPoint()) - (double) vS.getPoint().distanceFrom(HS.getPoint())) > this.epsilon){
+                        System.out.println("Marion regarde");
+                        System.out.println(v.getPoint());
+                        System.out.println(H.vertex.getPoint());
+                        System.out.println(vS.getPoint());
+                        System.out.println(HS.getPoint());
                         return false;
+                    }
                     H.tag=1;
                     H.opposite.tag=1; //avoid checking a length twice
                 }
@@ -483,7 +481,6 @@ public class Unfold {
 
     public void correspondance(){
         TC.ecritureDansNouveauFichier("correspondance.off");
-        int i = 0;
         for (Vertex<Point_2> v : this.M.vertices){
             //System.out.println(v.index+"       "+v.tag+"      "+v);
             TC.println(v.tag);//augmente
