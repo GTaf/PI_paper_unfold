@@ -13,7 +13,7 @@ public class Unfold {
     private Polyhedron_3<Point_2> M; // Patron du polyedre
     private Polyhedron_3<Point_3> S; // Polyedre original
     private DoubleHashMap<Halfedge<Point_2> ,Halfedge<Point_3>> plani ; //correlation entre S et M
-    private float epsilon ; //numeric tolerance
+    private double epsilon; //numeric tolerance
     private boolean BFS;
     private String filename;
 
@@ -22,7 +22,7 @@ public class Unfold {
     	this.filename = fichier;
         this.S = MeshLoader.getSurfaceMesh("OFF\\"+fichier);
         this.BFS = true;
-        this.epsilon = (float)0.1;
+        this.epsilon = 1;
     }
 
     public static void main(String[] args) {
