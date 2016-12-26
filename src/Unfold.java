@@ -16,7 +16,6 @@ public class Unfold {
     private float epsilon ; //numeric tolerance
     private boolean BFS;
     private String filename;
-    private int ifjd;
 
 
     private Unfold(String fichier) {
@@ -31,13 +30,14 @@ public class Unfold {
         Unfold U = new Unfold(filename);   
         // mettre dans le OFF
         U.Mesh2DToOff();
-        //U.correspondance();
+        
+        U.correspondance();
         ShowPlanarUnfolding.draw2D("results/2D_"+filename);
         
-        Polyhedron_3<Point_2> polyhedron2D=MeshLoader.getPlanarMesh("results/2D_"+filename);
-
-        System.out.println(polyhedron2D.isValid(false));
-        System.out.println(U.isOverlapping());
+        System.out.println("Le depliage est valide : "+U.isValid());
+        
+        System.out.println("Le depliage est isometrique : "+U.isIsometric());
+        System.out.println("Le depliage contient des recouvrements : "+U.isOverlapping());
     }
 
     /* Put a 2D mesh into an OFF file format and compute the correspondance betwenn vertices from S and M into an OFF file*/
@@ -139,23 +139,28 @@ public class Unfold {
         }
         //parcours contient l'ordre dans lequel il faut découper les faces
         this.plani = new DoubleHashMap<Halfedge<Point_2> ,Halfedge<Point_3>>();
-        System.out.println(parcours);
+        System.out.println("parcours : ");
+        for(Face<Point_3> f : parcours){
+        	System.out.println(f);
+        }
+        System.out.println();
+        	
 
         this.M = new Polyhedron_3<Point_2>();
         //traite  part la première face
         System.out.println("Face n0 : "+parcours.getFirst());
         this.firstTo2D(parcours.removeFirst(),plani);
 
-        
+        /*
         for(Face<Point_3> f : parcours){
             this.to2D(f,plani);
             //System.out.println(f.getEdge());
-        }
-        /*
-        for(int i = 0; i <6;i++){
+        }*/
+        
+        for(int i = 0; i <5;i++){
         	this.to2D(parcours.get(i), plani);
         	//System.out.println("Face n"+(i+1)+" : "+parcours.get(i));
-        }*/
+        }
         
         //plani.values();
         
@@ -220,7 +225,7 @@ public class Unfold {
             p.translateOf(p1.minus(new Point_2(0,0)).opposite());
             //System.out.println(F.getEdge());
             plani.put(this.splitEdge(F.getEdge().prev.prev, p),H);
-            F.getEdge().prev.prev.getVertex().tag = H.vertex.index;//met le tag
+            F.getEdge().prev.prev.prev.getVertex().tag = H.vertex.index;//met le tag
 
             H = H.next;
             //ne pas oublier le hasmap
@@ -255,11 +260,6 @@ public class Unfold {
             h=h.next;
         }
         
-        //ajoute tag
-        h.getOpposite().getVertex().tag = f.getEdge().prev.vertex.index;//p1
-        h.getVertex().tag = f.getEdge().vertex.index;//p2
-        h.next.getVertex().tag = f.getEdge().next.vertex.index;//p3
-
         Halfedge<Point_3> H = f.getEdge();
         H = H.next.next.next; //va au sommet non traite
         this.M.facets.get(0).setEdge(this.M.facets.get(0).getEdge().next);//change le edge de reference,
@@ -271,7 +271,7 @@ public class Unfold {
             Point_2 p = new Point_2(costeta(pp1,pp2,pp)*d, sinteta(pp1,pp2,pp)*d);//point �  calculer en 2D, connaissant le hlafedge precedent H.previous
             plani.put(this.splitEdge(this.M.facets.get(0).getEdge().prev, p),H);
             
-            this.M.facets.get(0).getEdge().prev.prev.getVertex().tag = H.prev.vertex.index;//met le tag
+            this.M.facets.get(0).getEdge().prev.getVertex().tag = H.next.vertex.index;//met le tag
             
 
             H = H.next;
@@ -336,7 +336,8 @@ public class Unfold {
 
     /*Check combinatorial validity*/
     public boolean isValid(){
-        return this.M.isValid(false); //version je m'emmerde pas a voir si on met true ou false
+    	Polyhedron_3<Point_2> polyhedron2D = MeshLoader.getPlanarMesh("results/2D_"+this.filename);
+        return polyhedron2D.isValid(false); //version je m'emmerde pas a voir si on met true ou false
     }
 
 
@@ -484,14 +485,16 @@ public class Unfold {
         TC.ecritureDansNouveauFichier("correspondance.off");
         int i = 0;
         for (Vertex<Point_2> v : this.M.vertices){
-            System.out.println(v.index+"       "+v.tag);
+            //System.out.println(v.index+"       "+v.tag+"      "+v);
+            TC.println(v.tag);//augmente
         }
         
-        for (Vertex<Point_3> v : this.S.vertices){
+        /*for (Vertex<Point_3> v : this.S.vertices){
             System.out.println(v.index+"       "+v);
+            System.out.println(this.S.vertices.get(i++).index);
         }
         
-        System.out.println(i);
+        System.out.println(i);*/
     }
 
 
