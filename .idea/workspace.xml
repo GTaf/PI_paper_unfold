@@ -2,8 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="99f466cb-27d2-4922-a169-45c5fdb3b54c" name="Default" comment="Librairies pour que ça marche bien">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/production/unfold/Unfold.class" afterPath="$PROJECT_DIR$/out/production/unfold/Unfold.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Unfold.java" afterPath="$PROJECT_DIR$/src/Unfold.java" />
     </list>
     <ignored path="$PROJECT_DIR$/out/" />
@@ -34,8 +32,8 @@
       <file leaf-file-name="Unfold.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/Unfold.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="255">
-              <caret line="35" column="57" lean-forward="false" selection-start-line="35" selection-start-column="57" selection-end-line="35" selection-end-column="57" />
+            <state relative-caret-position="284">
+              <caret line="37" column="55" lean-forward="false" selection-start-line="37" selection-start-column="55" selection-end-line="37" selection-end-column="55" />
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -568,12 +566,12 @@
       <option name="presentableId" value="Default" />
       <updated>1482250514527</updated>
       <workItem from="1482250518958" duration="3503000" />
-      <workItem from="1482669227224" duration="9186000" />
+      <workItem from="1482669227224" duration="9751000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="12689000" />
+    <option name="totallyTimeSpent" value="13254000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -667,10 +665,18 @@
         </state>
       </provider>
     </entry>
+    <entry file="jar://$PROJECT_DIR$/lib/TC.jar!/tc/TC.class">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="228">
+          <caret line="207" column="0" lean-forward="false" selection-start-line="207" selection-start-column="0" selection-end-line="207" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/Unfold.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="255">
-          <caret line="35" column="57" lean-forward="false" selection-start-line="35" selection-start-column="57" selection-end-line="35" selection-end-column="57" />
+        <state relative-caret-position="284">
+          <caret line="37" column="55" lean-forward="false" selection-start-line="37" selection-start-column="55" selection-end-line="37" selection-end-column="55" />
           <folding>
             <element signature="imports" expanded="true" />
           </folding>

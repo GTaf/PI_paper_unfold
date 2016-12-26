@@ -24,16 +24,15 @@ public class Unfold {
     }
 
     public static void main(String[] args) {
-    	String filename = "cube.off";
+    	String filename = "octagon.off";
         Unfold U = new Unfold(filename);   
         // mettre dans le OFF
         U.Mesh2DToOff();
         //U.correspondance();
         ShowPlanarUnfolding.draw2D("results/2D_"+filename);
-        System.out.println(U.isValid());
+        //System.out.println(U.isValid());
         //System.out.println(U.isIsometric());
-        if (!U.isOverlapping())
-            System.out.println("The unfolding is not overlapping");
+        System.out.println(U.isOverlapping());
     }
 
     /* Put a 2D mesh into an OFF file format and compute the correspondance betwenn vertices from S and M into an OFF file*/
