@@ -2,32 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="99f466cb-27d2-4922-a169-45c5fdb3b54c" name="Default" comment="Librairies pour que ça marche bien">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/out/production/unfold/ArcBall$Quat.class" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/out/production/unfold/ArcBall$Vec3.class" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/out/production/unfold/ArcBall.class" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/out/production/unfold/DoubleHashMap.class" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/out/production/unfold/Show3DMesh.class" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/out/production/unfold/ShowPlanarUnfolding.class" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/out/production/unfold/SurfaceMesh.class" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/out/production/unfold/Unfold.class" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/OFF/bevel_cube.off" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/OFF/bunny_small.off" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/OFF/cube.off" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/OFF/cube_subdivided.off" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/OFF/cube_tri.off" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/OFF/cube_trunc.off" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/OFF/ellipsoid_tri.off" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/OFF/octagon.off" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/OFF/planar_cube_trunc.off" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/OFF/planar_square.off" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/OFF/sphere.off" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/OFF/star.off" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/OFF/twisted.off" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/correspondance.off" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/correspondance.txt" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/results/2D_bunny_small.off" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/results/2D_cube.off" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/.idea/libraries/LIB.xml" afterPath="$PROJECT_DIR$/.idea/libraries/lib.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/production/unfold/Unfold.class" afterPath="$PROJECT_DIR$/out/production/unfold/Unfold.class" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Unfold.java" afterPath="$PROJECT_DIR$/src/Unfold.java" />
     </list>
@@ -59,8 +34,8 @@
       <file leaf-file-name="Unfold.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/Unfold.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="6443">
-              <caret line="381" column="200" lean-forward="false" selection-start-line="381" selection-start-column="200" selection-end-line="381" selection-end-column="200" />
+            <state relative-caret-position="255">
+              <caret line="35" column="57" lean-forward="false" selection-start-line="35" selection-start-column="57" selection-end-line="35" selection-end-column="57" />
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -593,12 +568,12 @@
       <option name="presentableId" value="Default" />
       <updated>1482250514527</updated>
       <workItem from="1482250518958" duration="3503000" />
-      <workItem from="1482669227224" duration="8755000" />
+      <workItem from="1482669227224" duration="9186000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="12258000" />
+    <option name="totallyTimeSpent" value="12689000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -694,8 +669,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/Unfold.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="6443">
-          <caret line="381" column="200" lean-forward="false" selection-start-line="381" selection-start-column="200" selection-end-line="381" selection-end-column="200" />
+        <state relative-caret-position="255">
+          <caret line="35" column="57" lean-forward="false" selection-start-line="35" selection-start-column="57" selection-end-line="35" selection-end-column="57" />
           <folding>
             <element signature="imports" expanded="true" />
           </folding>

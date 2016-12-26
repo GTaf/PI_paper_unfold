@@ -30,9 +30,10 @@ public class Unfold {
         U.Mesh2DToOff();
         //U.correspondance();
         ShowPlanarUnfolding.draw2D("results/2D_"+filename);
-        //System.out.println(U.isValid());
+        System.out.println(U.isValid());
         //System.out.println(U.isIsometric());
-        System.out.println(U.isOverlapping());
+        if (!U.isOverlapping())
+            System.out.println("The unfolding is not overlapping");
     }
 
     /* Put a 2D mesh into an OFF file format and compute the correspondance betwenn vertices from S and M into an OFF file*/
