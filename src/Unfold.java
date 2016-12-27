@@ -26,7 +26,7 @@ public class Unfold {
     }
 
     public static void main(String[] args) {
-    	String filename = "cube.off";
+    	String filename = "bunny_small.off";
         Unfold U = new Unfold(filename);   
         // mettre dans le OFF
         U.Mesh2DToOff();
@@ -34,9 +34,10 @@ public class Unfold {
         U.correspondance();
         ShowPlanarUnfolding.draw2D("results/2D_"+filename);
         
-        System.out.println("Le depliage est valide : "+U.isValid());
-        
         System.out.println("Le depliage est isometrique : "+U.isIsometric());
+        
+        System.out.println("Le depliage est valide : "+U.isValid());
+   
         System.out.println("Le depliage contient des recouvrements : "+U.isOverlapping());
     }
 
@@ -151,16 +152,16 @@ public class Unfold {
         System.out.println("Face n0 : "+parcours.getFirst());
         this.firstTo2D(parcours.removeFirst(),plani);
 
-        /*
+        
         for(Face<Point_3> f : parcours){
             this.to2D(f,plani);
             //System.out.println(f.getEdge());
-        }*/
-        
+        }
+        /*
         for(int i = 0; i <5;i++){
         	this.to2D(parcours.get(i), plani);
         	//System.out.println("Face n"+(i+1)+" : "+parcours.get(i));
-        }
+        }*/
         
         //plani.values();
         
@@ -247,7 +248,7 @@ public class Unfold {
         //remplir la table de hachage
         Halfedge<Point_2> h = this.M.facets.get(0).getEdge();
         for(int i = 0; i <3; i++){
-            if (h.vertex.getPoint().x==0 && h.vertex.getPoint().y == 0)h.vertex.tag = f.getEdge().vertex.index; //plani.put(h,f.getEdge());
+            if (h.vertex.getPoint().x==0 && h.vertex.getPoint().y == 0) h.vertex.tag = f.getEdge().vertex.index; //plani.put(h,f.getEdge());
             else if (h.vertex.getPoint().y == 0) {
             	plani.put(h, f.getEdge().next);
             	System.out.println("verif");
@@ -276,7 +277,7 @@ public class Unfold {
             Point_2 p = new Point_2(costeta(pp1,pp2,pp)*d, sinteta(pp1,pp2,pp)*d);//point �  calculer en 2D, connaissant le hlafedge precedent H.previous
             plani.put(this.splitEdge(this.M.facets.get(0).getEdge().prev, p),H);
             
-            this.M.facets.get(0).getEdge().prev.getVertex().tag = H.next.vertex.index;//met le tag
+            this.M.facets.get(0).getEdge().prev.prev.getVertex().tag = H.vertex.index;//met le tag
             
 
             H = H.next;
@@ -348,24 +349,25 @@ public class Unfold {
 
     /*Check the isometry of the unfolding*/
     public boolean isIsometric(){
-        Polyhedron_3<Point_2> polyhedron2D = MeshLoader.getPlanarMesh("results/2D_"+this.filename);
+        /*Polyhedron_3<Point_2> polyhedron2D = MeshLoader.getPlanarMesh("results/2D_"+this.filename);
         resetTag2D(polyhedron2D);
 	    for(int i = 0; i < this.S.vertices.size();i++){
-	        //TC.lectureDansFichier("correspondance.off"); ne termine pas sans cette ligne, incorrect avec
+	        TC.lectureDansFichier("correspondance.off"); //ne termine pas sans cette ligne, incorrect avec
 			String[] s =  TC.motsDeChaine(TC.lireLigne());
 			for(String mot : s){
 				polyhedron2D.vertices.get(Integer.parseInt(mot)).tag = i;
 			}
-		}
+		}*/
 
-		for (Halfedge<Point_2> h : polyhedron2D.halfedges){
+		for (Halfedge<Point_2> h : this.M.halfedges){
 
 	        if (h.tag ==0 && h.opposite.tag==0){
                 Vertex<Point_3> hS = this.S.vertices.get(h.vertex.tag);
                 Vertex<Point_3> hoS = this.S.vertices.get(h.opposite.vertex.tag);
 
 	            if (Math.abs((double)h.vertex.getPoint().distanceFrom(h.opposite.vertex.getPoint()) - (double)hS.getPoint().distanceFrom(hoS.getPoint()))>this.epsilon) {
-	                System.out.println(hS.getPoint()+" "+hoS.getPoint());
+	                System.out.println(hS+" "+hoS+"    "+h.vertex+"        "+h.opposite.vertex);
+	                
 	                return false;
                 }
                 h.tag = 0;
@@ -511,7 +513,7 @@ public class Unfold {
     public void correspondance(){
         TC.ecritureDansNouveauFichier("correspondance.off");
         for (Vertex<Point_2> v : this.M.vertices){
-            //System.out.println(v.index+"       "+v.tag+"      "+v);
+            System.out.println(v.index+"       "+v.tag+"      "+v);
             TC.println(v.tag);//augmente
         }
         
