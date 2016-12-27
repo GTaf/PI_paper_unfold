@@ -350,6 +350,12 @@ public class Unfold {
     public boolean isIsometric(){
         Polyhedron_3<Point_2> polyhedron2D = MeshLoader.getPlanarMesh("results/2D_"+this.filename);
         resetTag2D(polyhedron2D);
+	for(int i = 0; i < this.S.vertices.size();i++){
+			String[] s =  TC.motsDeChaine(TC.lireLigne());
+			for(String mot : s){
+				polyhedron2D.vertices.get(Integer.parseInt(mot)).tag = i;
+			}
+		}
 
         for (Vertex<Point_2> v : polyhedron2D.vertices ){
             Halfedge<Point_2> h = v.getHalfedge();
