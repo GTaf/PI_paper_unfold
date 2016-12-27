@@ -350,16 +350,34 @@ public class Unfold {
     public boolean isIsometric(){
         Polyhedron_3<Point_2> polyhedron2D = MeshLoader.getPlanarMesh("results/2D_"+this.filename);
         resetTag2D(polyhedron2D);
-	for(int i = 0; i < this.S.vertices.size();i++){
+	    for(int i = 0; i < this.S.vertices.size();i++){
+	        //TC.lectureDansFichier("correspondance.off"); ne termine pas sans cette ligne, incorrect avec
 			String[] s =  TC.motsDeChaine(TC.lireLigne());
 			for(String mot : s){
 				polyhedron2D.vertices.get(Integer.parseInt(mot)).tag = i;
 			}
 		}
 
-        for (Vertex<Point_2> v : polyhedron2D.vertices ){
+		for (Halfedge<Point_2> h : polyhedron2D.halfedges){
+
+	        if (h.tag ==0 && h.opposite.tag==0){
+                Vertex<Point_3> hS = this.S.vertices.get(h.vertex.tag);
+                Vertex<Point_3> hoS = this.S.vertices.get(h.opposite.vertex.tag);
+
+	            if (Math.abs((double)h.vertex.getPoint().distanceFrom(h.opposite.vertex.getPoint()) - (double)hS.getPoint().distanceFrom(hoS.getPoint()))>this.epsilon) {
+	                System.out.println(hS.getPoint()+" "+hoS.getPoint());
+	                return false;
+                }
+                h.tag = 0;
+	            h.opposite.tag =0;
+            }
+        }
+
+        return true ;
+
+        /*for (Vertex<Point_2> v : polyhedron2D.vertices ){
             Halfedge<Point_2> h = v.getHalfedge();
-            Halfedge<Point_2> H = h.prev;
+            Halfedge<Point_2> H = h.opposite;
             Vertex<Point_3> vS = this.S.vertices.get(v.tag);
 
             //cas initial
@@ -378,7 +396,7 @@ public class Unfold {
                 H.tag=1;
                 H.opposite.tag=1; //avoid checking a length twice
             }
-            H=H.next.next;
+            H=h.next;
 
             while ( H != h && H != h.opposite) {
 
@@ -400,7 +418,7 @@ public class Unfold {
             }
         }
 
-        return true;//each edges has been checked
+        return true;//each edges has been checked*/
     }
 
     /*Check the existence of overlapping edges*/
