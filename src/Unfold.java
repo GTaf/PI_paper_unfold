@@ -26,7 +26,7 @@ public class Unfold {
     }
 
     public static void main(String[] args) {
-    	String filename = "bunny_small.off";
+    	String filename = "cube.off";
         Unfold U = new Unfold(filename);   
         // mettre dans le OFF
         U.Mesh2DToOff();
@@ -370,57 +370,14 @@ public class Unfold {
 	                
 	                return false;
                 }
-                h.tag = 0;
-	            h.opposite.tag =0;
+                h.tag = 1;
+	            h.opposite.tag =1;
             }
         }
 
         return true ;
 
-        /*for (Vertex<Point_2> v : polyhedron2D.vertices ){
-            Halfedge<Point_2> h = v.getHalfedge();
-            Halfedge<Point_2> H = h.opposite;
-            Vertex<Point_3> vS = this.S.vertices.get(v.tag);
-
-            //cas initial
-            if ( h.tag == 0){
-                Vertex<Point_3> HS = this.S.vertices.get(H.vertex.tag);
-
-                if (Math.abs((double)v.getPoint().distanceFrom(H.vertex.getPoint()) - (double)vS.getPoint().distanceFrom(HS.getPoint()))>this.epsilon) {
-                    System.out.println("Marion regarde1");
-                    System.out.println(v.getPoint());
-                    System.out.println(H.vertex.getPoint());
-                    System.out.println(v.tag);
-                    System.out.println(H.vertex.tag);
-
-                    return false;
-                }
-                H.tag=1;
-                H.opposite.tag=1; //avoid checking a length twice
-            }
-            H=h.next;
-
-            while ( H != h && H != h.opposite) {
-
-                if ( H.tag == 0) {
-                    Vertex<Point_3> HS = S.vertices.get(H.vertex.tag);
-
-                    if (Math.abs((double) v.getPoint().distanceFrom(H.vertex.getPoint()) - (double) vS.getPoint().distanceFrom(HS.getPoint())) > this.epsilon){
-                        System.out.println("Marion regarde");
-                        System.out.println(v.getPoint());
-                        System.out.println(H.vertex.getPoint());
-                        System.out.println(vS.getPoint());
-                        System.out.println(HS.getPoint());
-                        return false;
-                    }
-                    H.tag=1;
-                    H.opposite.tag=1; //avoid checking a length twice
-                }
-                H=H.opposite.next;
-            }
-        }
-
-        return true;//each edges has been checked*/
+        
     }
 
     /*Check the existence of overlapping edges*/
@@ -428,12 +385,12 @@ public class Unfold {
         resetTag2D(this.M);
         for (Halfedge h : M.halfedges){
             for (Halfedge t : M.halfedges){
-                if (t.tag != 0){
-                    if (doIntersect(new Segment_2((Point_2)h.vertex.getPoint(),(Point_2)h.opposite.vertex.getPoint()), new Segment_2((Point_2)t.vertex.getPoint(),(Point_2)t.opposite.vertex.getPoint())));
+                if (t.tag == 0){
+                    if (doIntersect(new Segment_2((Point_2)h.vertex.getPoint(),(Point_2)h.opposite.vertex.getPoint()), new Segment_2((Point_2)t.vertex.getPoint(),(Point_2)t.opposite.vertex.getPoint())))
                     return true;
                 }
             }
-            h.tag=0; //don't check twice
+            h.tag=1; //don't check twice
         }
         return false;
     }
