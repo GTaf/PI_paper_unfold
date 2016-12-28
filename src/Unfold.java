@@ -7,7 +7,9 @@ import Jcg.mesh.MeshLoader;
 import Jcg.polyhedron.*;
 import tc.TC;
 
-import static Jcg.geometry.GeometricOperations_2.doIntersect;
+import static Jcg.geometry.GeometricOperations_2.intersect;
+import static java.lang.Double.compare;
+import static java.lang.Float.NaN;
 
 public class Unfold {
     private Polyhedron_3<Point_2> M; // Patron du polyedre
@@ -22,11 +24,11 @@ public class Unfold {
     	this.filename = fichier;
         this.S = MeshLoader.getSurfaceMesh("OFF\\"+fichier);
         this.BFS = true;
-        this.epsilon = (double) 0.55;
+        this.epsilon = (double) 0.1;
     }
 
     public static void main(String[] args) {
-    	String filename = "cube.off";
+    	String filename = "bunny_small.off";
         Unfold U = new Unfold(filename);   
         // mettre dans le OFF
         U.Mesh2DToOff();
@@ -383,16 +385,41 @@ public class Unfold {
     /*Check the existence of overlapping edges*/
     public boolean isOverlapping(){
         resetTag2D(this.M);
+
         for (Halfedge h : M.halfedges){
+
             for (Halfedge t : M.halfedges){
-                if (t.tag == 0){
-                    if (doIntersect(new Segment_2((Point_2)h.vertex.getPoint(),(Point_2)h.opposite.vertex.getPoint()), new Segment_2((Point_2)t.vertex.getPoint(),(Point_2)t.opposite.vertex.getPoint())))
-                    return true;
+
+                if (t.tag == 0 && (! t.equals(h)) && (! t.equals(h.opposite))){
+                    Point_2 pI = intersect(new Segment_2((Point_2)t.vertex.getPoint(),(Point_2)t.opposite.vertex.getPoint()), new Segment_2((Point_2)h.vertex.getPoint(),(Point_2)h.opposite.vertex.getPoint())); // intersection entre les deux droites
+
+                    if (estSur((Point_2)h.vertex.getPoint(),(Point_2)h.opposite.vertex.getPoint(),new Point_2( (((Point_2) h.vertex.getPoint()).x+((Point_2) h.opposite.vertex.getPoint()).x)/(double)2,(((Point_2) h.vertex.getPoint()).y+((Point_2) h.opposite.vertex.getPoint()).y)/(double)2)))
+                        System.out.println("false"+h.vertex.getPoint() +"  "+h.opposite.vertex.getPoint()); // Problème répond false pour certains points...
+                    //System.out.println("regarde"+estSur((Point_2)h.vertex.getPoint(),(Point_2)h.opposite.vertex.getPoint(),new Point_2( (((Point_2) h.vertex.getPoint()).x+((Point_2) h.opposite.vertex.getPoint()).x)/(double)2,(((Point_2) h.vertex.getPoint()).y+((Point_2) h.opposite.vertex.getPoint()).y)/(double)2)));
+                    //System.out.println(estSur((Point_2)h.vertex.getPoint(),(Point_2)h.opposite.vertex.getPoint(),pI));
+
+                    if ( (! pI.equals(new Point_2(NaN,NaN))) && estSur((Point_2)h.vertex.getPoint(),(Point_2)h.opposite.vertex.getPoint(),pI) && estSur((Point_2)t.vertex.getPoint(),(Point_2)t.opposite.vertex.getPoint(),pI) ) {
+                        System.out.println(pI);
+                        System.out.println(h.vertex.getPoint() + " "+ h.opposite.vertex.getPoint());
+                        System.out.println(t.vertex.getPoint() + " "+ t.opposite.vertex.getPoint());
+                        return true;
+                    }
                 }
             }
-            h.tag=1; //don't check twice
+            h.tag=1;
+            h.opposite.tag =1;//don't check twice
         }
         return false;
+    }
+
+    private boolean estSur(Point_2 a, Point_2 b, Point_2 h){
+        if (a.x.equals(b.x) )
+            return ( h.x.equals(a.x) && compare(h.y,Math.max(b.y,a.y))<0 && compare(Math.min(a.y,b.y),h.y)<0  );
+        if (a.y.equals(b.y) ){
+            return ( h.y.equals(a.y) && compare(h.x, Math.max(b.x,a.x))<0 && compare(Math.min(a.x,b.x), h.x)<0  );
+        }
+        else return (h.y.equals(((a.y-b.y)/a.x-b.x)*(h.x-a.x) + a.y) && compare(h.y,Math.max(b.y,a.y))<0 && compare(Math.min(a.y,b.y),h.y)<0 && compare(h.x, Math.max(b.x,a.x))<0 && compare(Math.min(a.x,b.x), h.x)<0  ) ;
+        //return (H.source().squareDistance(H.target()).floatValue()==H.source().squareDistance(h).floatValue()+H.target().squareDistance(h).floatValue());
     }
 
 
