@@ -508,6 +508,14 @@ public class Unfold {
         
         System.out.println(i);*/
     }
+	
+    /*calcule les poids m et retourne le cut tree*/
+    public Hashtable<Integer, Halfedge<Point_3>> minimumParameter(){
+    	   LinkedList<Halfedge<Point_3>> L = UnionFind.kruskal(new UnionFind(), this.S);
+    	   Hashtable<Integer, Halfedge<Point_3>> ht = new Hashtable<>();
+    	   for(Halfedge<Point_3> h : L) ht.put(h.hashCode(),h);
+    	return ht;
+    }
 
 
 
