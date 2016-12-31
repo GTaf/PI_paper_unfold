@@ -28,7 +28,7 @@ public class Unfold {
     }
 
     public static void main(String[] args) {
-    	String filename = "bunny_small.off";
+    	String filename = "cube_trunc.off";
         Unfold U = new Unfold(filename);   
         // mettre dans le OFF
         U.Mesh2DToOff();
@@ -69,7 +69,7 @@ public class Unfold {
     /*computing the unfolding M given the mesh S of the unfold instance*/
     private void computeM() {
         // creer le cut tree
-        Hashtable<Integer, Halfedge<Point_3>> cutTree = this.computeCutTree();
+        Hashtable<Integer, Halfedge<Point_3>> cutTree = this.flatSpanning();//this.computeCutTree();
 
         // couper le mesh et le mettre a  plat
         this.cutMesh(cutTree);
@@ -516,6 +516,13 @@ public class Unfold {
     	   for(Halfedge<Point_3> h : L) ht.put(h.hashCode(),h);
     	return ht;
     }
+    
+    public Hashtable<Integer, Halfedge<Point_3>> flatSpanning(){
+ 	   LinkedList<Halfedge<Point_3>> L = UnionFind.kruskal(new UnionFind(), this.S, new DirectionComparator(this.S.halfedges.get(0)));
+ 	   Hashtable<Integer, Halfedge<Point_3>> ht = new Hashtable<>();
+ 	   for(Halfedge<Point_3> h : L) ht.put(h.hashCode(),h);
+ 	return ht;
+ }
 
 
 
