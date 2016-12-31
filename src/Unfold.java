@@ -18,6 +18,7 @@ public class Unfold {
     private double epsilon; //numeric tolerance
     private boolean BFS;
     private String filename;
+    private int[] intersection;
 
 
     private Unfold(String fichier) {
@@ -28,7 +29,7 @@ public class Unfold {
     }
 
     public static void main(String[] args) {
-    	String filename = "cube_trunc.off";
+    	String filename = "bunny_small.off";
         Unfold U = new Unfold(filename);   
         // mettre dans le OFF
         U.Mesh2DToOff();
@@ -385,41 +386,44 @@ public class Unfold {
     /*Check the existence of overlapping edges*/
     public boolean isOverlapping(){
         resetTag2D(this.M);
+        boolean res = false;
+        intersection = new int[this.M.halfedges.size()];
+        for(int i : intersection){ i = -1;}
+        //a faire: soit segment avec pt en commun --> ok
+        // sinon checker si l'intersection est dans le rectangle défini par les maxs
 
         for (Halfedge h : M.halfedges){
-
+        	if(h.tag == 0){
             for (Halfedge t : M.halfedges){
-
-                if (t.tag == 0 && (! t.equals(h)) && (! t.equals(h.opposite))){
-                    Point_2 pI = intersect(new Segment_2((Point_2)t.vertex.getPoint(),(Point_2)t.opposite.vertex.getPoint()), new Segment_2((Point_2)h.vertex.getPoint(),(Point_2)h.opposite.vertex.getPoint())); // intersection entre les deux droites
-
-                    if (estSur((Point_2)h.vertex.getPoint(),(Point_2)h.opposite.vertex.getPoint(),new Point_2( (((Point_2) h.vertex.getPoint()).x+((Point_2) h.opposite.vertex.getPoint()).x)/(double)2,(((Point_2) h.vertex.getPoint()).y+((Point_2) h.opposite.vertex.getPoint()).y)/(double)2)))
-                        System.out.println("false"+h.vertex.getPoint() +"  "+h.opposite.vertex.getPoint()); // Problème répond false pour certains points...
-                    //System.out.println("regarde"+estSur((Point_2)h.vertex.getPoint(),(Point_2)h.opposite.vertex.getPoint(),new Point_2( (((Point_2) h.vertex.getPoint()).x+((Point_2) h.opposite.vertex.getPoint()).x)/(double)2,(((Point_2) h.vertex.getPoint()).y+((Point_2) h.opposite.vertex.getPoint()).y)/(double)2)));
-                    //System.out.println(estSur((Point_2)h.vertex.getPoint(),(Point_2)h.opposite.vertex.getPoint(),pI));
-
-                    if ( (! pI.equals(new Point_2(NaN,NaN))) && estSur((Point_2)h.vertex.getPoint(),(Point_2)h.opposite.vertex.getPoint(),pI) && estSur((Point_2)t.vertex.getPoint(),(Point_2)t.opposite.vertex.getPoint(),pI) ) {
-                        System.out.println(pI);
-                        System.out.println(h.vertex.getPoint() + " "+ h.opposite.vertex.getPoint());
-                        System.out.println(t.vertex.getPoint() + " "+ t.opposite.vertex.getPoint());
-                        return true;
-                    }
-                }
-            }
+            	if(t.tag == 0){
+            	Point_2 p11,p12,p21,p22;
+            	double xMax,xMin,yMax,yMin;
+            	p11 = (Point_2)h.getVertex().getPoint();
+            	p12 = (Point_2)h.opposite.vertex.getPoint();
+            	p21 = (Point_2)t.getVertex().getPoint();
+            	p22 = (Point_2)t.opposite.vertex.getPoint();
+            	xMax = Math.max(Math.max(p11.x, p21.x),Math.max(p12.x, p22.x));
+            	xMin = Math.min(Math.min(p11.x, p21.x),Math.min(p12.x, p22.x));
+            	yMax = Math.max(Math.max(p11.y, p21.y),Math.max(p12.y, p22.y));
+            	yMin = Math.min(Math.min(p11.y, p21.y),Math.min(p12.y, p22.y));
+            	
+            	
+            	if((!(p11.equals(p21)||p11.equals(p22)||p12.equals(p21)||p12.equals(p22))) &&//segment successifs
+            			!(Math.min(p11.x, p12.x)>Math.max(p21.x, p22.x)) &&//segments alignés mais distincts
+            			!(Math.min(p21.x, p22.x)>Math.max(p11.x, p12.x)) &&
+            			!(Math.min(p11.y, p12.y)>Math.max(p21.y, p22.y)) &&
+            			!(Math.min(p21.y, p22.y)>Math.max(p11.y, p12.y)) ){ 
+            		Point_2 pI = intersect(new Segment_2((Point_2)t.vertex.getPoint(),(Point_2)t.opposite.vertex.getPoint()), new Segment_2((Point_2)h.vertex.getPoint(),(Point_2)h.opposite.vertex.getPoint())); // intersection entre les deux droites
+            		if(pI.x >= xMax || pI.x <= xMin || pI.y >= yMax||pI.y <= yMin){
+            			res = true;
+            			intersection[h.index] = t.index;
+            		}
+            	}
+            }}
             h.tag=1;
             h.opposite.tag =1;//don't check twice
-        }
-        return false;
-    }
-
-    private boolean estSur(Point_2 a, Point_2 b, Point_2 h){
-        if (a.x.equals(b.x) )
-            return ( h.x.equals(a.x) && compare(h.y,Math.max(b.y,a.y))<0 && compare(Math.min(a.y,b.y),h.y)<0  );
-        if (a.y.equals(b.y) ){
-            return ( h.y.equals(a.y) && compare(h.x, Math.max(b.x,a.x))<0 && compare(Math.min(a.x,b.x), h.x)<0  );
-        }
-        else return (h.y.equals(((a.y-b.y)/a.x-b.x)*(h.x-a.x) + a.y) && compare(h.y,Math.max(b.y,a.y))<0 && compare(Math.min(a.y,b.y),h.y)<0 && compare(h.x, Math.max(b.x,a.x))<0 && compare(Math.min(a.x,b.x), h.x)<0  ) ;
-        //return (H.source().squareDistance(H.target()).floatValue()==H.source().squareDistance(h).floatValue()+H.target().squareDistance(h).floatValue());
+        }}
+        return res;
     }
 
 
@@ -514,15 +518,21 @@ public class Unfold {
     	   LinkedList<Halfedge<Point_3>> L = UnionFind.kruskal(new UnionFind(), this.S, new lengthComparator());
     	   Hashtable<Integer, Halfedge<Point_3>> ht = new Hashtable<>();
     	   for(Halfedge<Point_3> h : L) ht.put(h.hashCode(),h);
-    	return ht;
+    	   return ht;
     }
     
     public Hashtable<Integer, Halfedge<Point_3>> flatSpanning(){
- 	   LinkedList<Halfedge<Point_3>> L = UnionFind.kruskal(new UnionFind(), this.S, new DirectionComparator(this.S.halfedges.get(0)));
- 	   Hashtable<Integer, Halfedge<Point_3>> ht = new Hashtable<>();
- 	   for(Halfedge<Point_3> h : L) ht.put(h.hashCode(),h);
- 	return ht;
- }
+    		LinkedList<Halfedge<Point_3>> L = UnionFind.kruskal(new UnionFind(), this.S, new DirectionComparator(this.S.halfedges.get(0)));
+ 	   		Hashtable<Integer, Halfedge<Point_3>> ht = new Hashtable<>();
+ 	   		for(Halfedge<Point_3> h : L) ht.put(h.hashCode(),h);
+ 	   		return ht;
+    }
+    
+    /**/
+    public void removeOverlaps(){
+    	RemoveOverlaps.removeOverlaps(intersection,this.M);
+    	
+    }
 
 
 
