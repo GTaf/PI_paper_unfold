@@ -91,7 +91,7 @@ public class Show3DMesh extends PApplet {
 			}
 			Show3DMesh.setInputFile(args[0]);*/
 			
-			Show3DMesh.setInputFile("OFF/bunny_small.off");
+			Show3DMesh.setInputFile("OFF/octagon.off");
 			
 			PApplet.main(new String[] { "Show3DMesh" });
 		}

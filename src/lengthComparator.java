@@ -11,7 +11,7 @@ public class lengthComparator implements Comparator<Halfedge<Point_3>>{
 		double l2 = (double)(h2.getVertex().getPoint().squareDistance(h2.opposite.vertex.getPoint()));
 		
 		
-		return Double.compare(l1,l2);//car on veut couper les plus petites
+		return Double.compare(l1,l2);//we want the smallest
 	}
 
 }

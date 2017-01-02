@@ -1,15 +1,10 @@
 import java.util.*;
-
-import javax.rmi.ssl.SslRMIClientSocketFactory;
-
 import Jcg.geometry.*;
 import Jcg.mesh.MeshLoader;
 import Jcg.polyhedron.*;
+import Jcg.viewer.old.Fenetre;
 import tc.TC;
-
 import static Jcg.geometry.GeometricOperations_2.intersect;
-import static java.lang.Double.compare;
-import static java.lang.Float.NaN;
 
 public class Unfold {
     private Polyhedron_3<Point_2> M; // Patron du polyedre
@@ -18,7 +13,7 @@ public class Unfold {
     private double epsilon; //numeric tolerance
     private boolean BFS;
     private String filename;
-    private int[] intersection;
+    private ArrayList<ArrayList<Integer>> intersection;
 
 
     private Unfold(String fichier) {
@@ -27,32 +22,48 @@ public class Unfold {
         this.BFS = true;
         this.epsilon = (double) 0.1;
     }
+    
+    private Unfold(Polyhedron_3<Point_2> M){
+    	this.M = M;
+    }
 
     public static void main(String[] args) {
-    	String filename = "bunny_small.off";
+    	String filename = "octagon.off";
         Unfold U = new Unfold(filename);   
         // mettre dans le OFF
-        U.Mesh2DToOff();
-        
+        U.computeM();
+        Mesh2DToOff(U.M,U.filename);
         U.correspondance();
-        ShowPlanarUnfolding.draw2D("results/2D_"+filename);
+        System.out.println("Le depliage est isometrique : "+U.isIsometric());        
         
-        System.out.println("Le depliage est isometrique : "+U.isIsometric());
+        U.M = MeshLoader.getPlanarMesh("results/2D_"+U.filename);
+
+        ShowPlanarUnfolding.draw2D("results/2D_"+U.filename);
         
         System.out.println("Le depliage est valide : "+U.isValid());
    
-        System.out.println("Le depliage contient des recouvrements : "+U.isOverlapping());
+        System.out.println("Le depliage contient "+U.isOverlapping()+" recouvrements");
+        
+        /*for(Halfedge<Point_2> h : U.M.halfedges){
+        	if((h.vertex.getPoint().y ==3.7350517958876917 )
+        		||(h.opposite.vertex.getPoint().y == 3.7350517958876917 ))
+        	System.out.println(h.index+"         "+h);
+        }*/
+        
+        U.removeOverlaps();
+        
+        System.out.println("done");
     }
 
     /* Put a 2D mesh into an OFF file format and compute the correspondance betwenn vertices from S and M into an OFF file*/
-    private void Mesh2DToOff() {
-        this.computeM();//compute the unfolding
-        resetTag2D(this.M);
-        resetIndex2D(this.M);
+    private static void Mesh2DToOff(Polyhedron_3<Point_2> M,String file) {
+        //compute the unfolding
+        resetTag2D(M);
+        resetIndex2D(M);
 
-        TC.ecritureDansNouveauFichier("results/2D_"+this.filename);
+        TC.ecritureDansNouveauFichier("results/2D_"+file);
         TC.println("OFF");//premiere ligne
-        TC.println(this.M.vertices.size()+" "+this.M.facets.size()+" 0");//nombre de trucs
+        TC.println(M.vertices.size()+" "+M.facets.size()+" 0");//nombre de trucs
         int i = 0;
         for(Vertex<Point_2> v : M.vertices){//ajoute les points et leur donne un index
             v.index = i++;
@@ -60,7 +71,7 @@ public class Unfold {
         }
         for(Face<Point_2> f : M.facets){//ajoute les faces et leur points
             String S = ""+f.degree();
-            int[] t = f.getVertexIndices(this.M);//tableau des index
+            int[] t = f.getVertexIndices(M);//tableau des index
             for(int c : t) S = S+" "+c;//ajoute les numero des sommets
             TC.println(S);
         }
@@ -78,22 +89,23 @@ public class Unfold {
 
     /* Compute BFS or DFS cut tree */
     private Hashtable<Integer, Halfedge<Point_3>> computeCutTree() {
+    	//the cut tree
         Hashtable<Integer, Halfedge<Point_3>> ht = new Hashtable<Integer, Halfedge<Point_3>>();
         LinkedList<Vertex<Point_3>> queue = new LinkedList<Vertex<Point_3>>();
 
-        resetTag3D(this.S); // met les tags a  0 : pas encore visite
+        resetTag3D(this.S); //all tags to 0
 
         if (this.S.vertices.size() == 0)
             return null;
 
-
-        queue.addFirst(this.S.vertices.get(0)); // ajout initial du premier halfedge
-        // dans queue
-        // ajoute les voisins
+        //add the first halfedge in the queue
+        queue.addFirst(this.S.vertices.get(0));
+        
+        //add the neighbors
         while (!queue.isEmpty()) {
             Vertex<Point_3> v = queue.removeFirst();
             Halfedge<Point_3> h = v.getHalfedge();
-            v.tag = 2; // marque le cote comme traite
+            v.tag = 2; //done for this vertex
 
             Halfedge<Point_3> H = h;
             while (H.next.opposite != h) {
@@ -102,7 +114,7 @@ public class Unfold {
                     ht.put(H.opposite.hashCode(), H.opposite);
                     H.face.tag = 1;
                     H.opposite.vertex.tag = 1;// va etre traite
-                    if(this.BFS)//BFS ou DFS
+                    if(this.BFS)//BFS or DFS
                     	queue.addLast(H.opposite.vertex);
                     else
                     	queue.addFirst(H.opposite.vertex);
@@ -113,7 +125,7 @@ public class Unfold {
         return ht;
     }
 
-	/* Cut the mesh according to the cut Tree given DONE*/
+	/* Cut the mesh according to the cut Tree given*/
 
     public void cutMesh(Hashtable<Integer, Halfedge<Point_3>> cutTree) {
         resetTag3D(this.S);//aucune face visitée
@@ -141,32 +153,20 @@ public class Unfold {
                 H.opposite.face.setEdge(H.opposite);//dit quelle est l'endroit d'entrée
             }
         }
-        //parcours contient l'ordre dans lequel il faut découper les faces
+        
+        //plani is the link between 2D and 3D for edges
         this.plani = new DoubleHashMap<Halfedge<Point_2> ,Halfedge<Point_3>>();
-        System.out.println("parcours : ");
-        for(Face<Point_3> f : parcours){
-        	System.out.println(f);
-        }
-        System.out.println();
-        	
 
         this.M = new Polyhedron_3<Point_2>();
-        //traite  part la première face
-        System.out.println("Face n0 : "+parcours.getFirst());
-        this.firstTo2D(parcours.removeFirst(),plani);
-
         
+        //especialy for the first face
+        this.firstTo2D(parcours.removeFirst(),plani);
+        
+        //add other faces
         for(Face<Point_3> f : parcours){
             this.to2D(f,plani);
-            //System.out.println(f.getEdge());
         }
-        /*
-        for(int i = 0; i <5;i++){
-        	this.to2D(parcours.get(i), plani);
-        	//System.out.println("Face n"+(i+1)+" : "+parcours.get(i));
-        }*/
-        
-        //plani.values();
+
         
         
 
@@ -185,54 +185,43 @@ public class Unfold {
         p2 = plani.get(f.getEdge().getOpposite()).getOpposite().getVertex().getPoint();
         double psi = Math.acos(costeta(p1,p2,new Point_2(p1.x+1.0,p1.y)));
         if((double)p1.minus(p2).getCartesian(1)<0) psi=-psi;
-        //System.out.println(p1.minus(p2).getCartesian(1));
 
         //calcul des points
         //premier point
         double teta = Math.acos(costeta(pp1,pp2,pp3));
         teta = teta+psi;
-        //System.out.println("tetat : "+teta+"    psi : "+psi+"     teta"+(teta-psi));
-        //System.out.println(p1+"           "+p2);
         p3 = new Point_2(Math.cos(teta)*(double)pp3.distanceFrom(pp1), Math.sin(teta)*(double)pp3.distanceFrom(pp1));
         p3.translateOf(p1.minus(new Point_2(0,0)).opposite());
         Halfedge<Point_2> h = plani.get(f.getEdge().getOpposite()).getOpposite();//celui de la face trait�e
-        System.out.println("\n"+ h);
-        System.out.println(h);
         this.M.addTriangleToBorder(h,p3);
+        
         //ajouter hachage
         plani.put(h, f.getEdge());
         plani.put(h.next, f.getEdge().next);
         plani.put(h.next.next, f.getEdge().next.next);
         
-        //ajoute tag
-        //h.getOpposite().getVertex().tag = f.getEdge().prev.vertex.index;//p1
-        //h.getVertex().tag = f.getEdge().vertex.index;//p2
+        //add tag
         h.next.getVertex().tag = f.getEdge().next.vertex.index;//p3
         
         //autres points
         Halfedge<Point_3> H = f.getEdge();
         H = H.next.next; //va au sommet non traite
         
-        Face<Point_2> F =plani.get(f.getEdge().getOpposite()).getOpposite().getFace();//face 2D
-        
-        
+        Face<Point_2> F =plani.get(f.getEdge().getOpposite()).getOpposite().getFace();//face 2D      
         F.setEdge(F.getEdge().next);//change le edge de reference
 
         
         while(H.next != f.getEdge()){
             Point_3 pp = H.vertex.getPoint(); //point �  ajouter au mesh
-            System.out.println(pp1);
             double d = (double)pp.distanceFrom(pp1);//distance entre p et l'origine
             teta = Math.acos(costeta(pp1,pp2,pp));
             teta = teta+psi;
             Point_2 p = new Point_2(Math.cos(teta)*d, Math.sin(teta)*d);//point �  calculer en 2D, connaissant le hlafedge precedent H.previous
-            p.translateOf(p1.minus(new Point_2(0,0)).opposite());
-            //System.out.println(F.getEdge());
+            p.translateOf(p1.minus(new Point_2(0,0)).opposite());//translate p of p1
             plani.put(this.splitEdge(F.getEdge().prev.prev, p),H);
             F.getEdge().prev.prev.prev.getVertex().tag = H.vertex.index;//met le tag
 
             H = H.next;
-            //ne pas oublier le hasmap
         }
         plani.put(F.getEdge().getPrev().getPrev(),H);
         
@@ -254,16 +243,11 @@ public class Unfold {
             if (h.vertex.getPoint().x==0 && h.vertex.getPoint().y == 0) h.vertex.tag = f.getEdge().vertex.index; //plani.put(h,f.getEdge());
             else if (h.vertex.getPoint().y == 0) {
             	plani.put(h, f.getEdge().next);
-            	System.out.println("verif");
             	h.vertex.tag = f.getEdge().next.vertex.index;
-            	System.out.println(h.vertex.tag);
-            	System.out.println();}
+            	}
             else {
             	plani.put(h,f.getEdge().next.next);
-                System.out.println("verif2");
             	h.vertex.tag = f.getEdge().next.next.vertex.index;
-                System.out.println(h.vertex.tag);
-
             }
             
             h=h.next;
@@ -345,32 +329,20 @@ public class Unfold {
 
     /*Check combinatorial validity*/
     public boolean isValid(){
-    	Polyhedron_3<Point_2> polyhedron2D = MeshLoader.getPlanarMesh("results/2D_"+this.filename);
-        return polyhedron2D.isValid(false);
+    	//Polyhedron_3<Point_2> polyhedron2D = MeshLoader.getPlanarMesh("results/2D_"+this.filename);
+        return this.M.isValid(false);
     }
 
 
     /*Check the isometry of the unfolding*/
     public boolean isIsometric(){
-        /*Polyhedron_3<Point_2> polyhedron2D = MeshLoader.getPlanarMesh("results/2D_"+this.filename);
-        resetTag2D(polyhedron2D);
-	    for(int i = 0; i < this.S.vertices.size();i++){
-	        TC.lectureDansFichier("correspondance.off"); //ne termine pas sans cette ligne, incorrect avec
-			String[] s =  TC.motsDeChaine(TC.lireLigne());
-			for(String mot : s){
-				polyhedron2D.vertices.get(Integer.parseInt(mot)).tag = i;
-			}
-		}*/
-
-		for (Halfedge<Point_2> h : this.M.halfedges){
+        for (Halfedge<Point_2> h : this.M.halfedges){
 
 	        if (h.tag ==0 && h.opposite.tag==0){
                 Vertex<Point_3> hS = this.S.vertices.get(h.vertex.tag);
                 Vertex<Point_3> hoS = this.S.vertices.get(h.opposite.vertex.tag);
 
-	            if (Math.abs((double)h.vertex.getPoint().distanceFrom(h.opposite.vertex.getPoint()) - (double)hS.getPoint().distanceFrom(hoS.getPoint()))>this.epsilon) {
-	                System.out.println(hS+" "+hoS+"    "+h.vertex+"        "+h.opposite.vertex);
-	                
+	            if (Math.abs((double)h.vertex.getPoint().distanceFrom(h.opposite.vertex.getPoint()) - (double)hS.getPoint().distanceFrom(hoS.getPoint()))>this.epsilon) {	                
 	                return false;
                 }
                 h.tag = 1;
@@ -384,17 +356,22 @@ public class Unfold {
     }
 
     /*Check the existence of overlapping edges*/
-    public boolean isOverlapping(){
+    public int isOverlapping(){
+    	//Fenetre f = new Fenetre();
         resetTag2D(this.M);
-        boolean res = false;
-        intersection = new int[this.M.halfedges.size()];
-        for(int i : intersection){ i = -1;}
-        //a faire: soit segment avec pt en commun --> ok
-        // sinon checker si l'intersection est dans le rectangle défini par les maxs
+        int res = 0;
+        this.intersection = new ArrayList<ArrayList<Integer>>();
+        for(int i = 0;i < this.M.halfedges.size();i++){
+        	this.intersection.add(new ArrayList<Integer>());
+        }
+        int i = 0;//créer les index des halfedge
+        for(Halfedge<Point_2> h : M.halfedges){
+        	h.index = i++;
+        }
 
-        for (Halfedge h : M.halfedges){
+        for (Halfedge<Point_2> h : M.halfedges){
         	if(h.tag == 0){
-            for (Halfedge t : M.halfedges){
+            for (Halfedge<Point_2> t : M.halfedges){
             	if(t.tag == 0){
             	Point_2 p11,p12,p21,p22;
             	double xMax,xMin,yMax,yMin;
@@ -414,9 +391,14 @@ public class Unfold {
             			!(Math.min(p11.y, p12.y)>Math.max(p21.y, p22.y)) &&
             			!(Math.min(p21.y, p22.y)>Math.max(p11.y, p12.y)) ){ 
             		Point_2 pI = intersect(new Segment_2((Point_2)t.vertex.getPoint(),(Point_2)t.opposite.vertex.getPoint()), new Segment_2((Point_2)h.vertex.getPoint(),(Point_2)h.opposite.vertex.getPoint())); // intersection entre les deux droites
-            		if(pI.x >= xMax || pI.x <= xMin || pI.y >= yMax||pI.y <= yMin){
-            			res = true;
-            			intersection[h.index] = t.index;
+            		if(!(pI.x >= xMax || pI.x <= xMin || pI.y >= yMax||pI.y <= yMin)){
+            			
+            			if(!intersection.get(h.opposite.index).contains(t.index) &&
+            					!intersection.get(h.index).contains(t.opposite.index)){
+            					intersection.get(h.index).add(t.index);//agit que siopposé non traité
+            					res++;//on a une intersection
+            			}
+            			
             		}
             	}
             }}
@@ -469,51 +451,16 @@ public class Unfold {
 
         return hNewLeft;
     }
-    
-    
-    
-    /* Put a 2D mesh into an OFF file format and compute the correspondance betwenn vertices from S and M into an OFF file*/
-    public void Mesh2DToOff2() {
-        resetTag2D(this.M);
-        resetIndex2D(this.M);
-
-        TC.ecritureDansNouveauFichier("2dmesh.off");
-        TC.println("OFF");//premiere ligne
-        TC.println(this.M.vertices.size()+" "+this.M.facets.size()+" 0");//nombre de trucs
-        int i = 0;
-        for(Vertex<Point_2> v : M.vertices){//ajoute les points et leur donne un index
-            v.index = i++;
-            TC.println(v.getPoint().x+" "+v.getPoint().y+" 0.000000");
-        }
-        for(Face<Point_2> f : M.facets){//ajoute les faces et leur points
-            String S = ""+f.degree();
-            int[] t = f.getVertexIndices(this.M);//tableau des index
-            for(int c : t) S = S+" "+c;//ajoute les numero des sommets
-            TC.println(S);
-        }
-        TC.ecritureDansNouveauFichier("correspondance.off");
-        for (Vertex<Point_2> v : M.vertices){
-            //TC.println(this.plani.get(v.getHalfedge()).vertex.index);
-        }
-
-    }
 
     public void correspondance(){
         TC.ecritureDansNouveauFichier("correspondance.off");
         for (Vertex<Point_2> v : this.M.vertices){
-            System.out.println(v.index+"       "+v.tag+"      "+v);
+            //System.out.println(v.index+"       "+v.tag+"      "+v);
             TC.println(v.tag);//augmente
         }
-        
-        /*for (Vertex<Point_3> v : this.S.vertices){
-            System.out.println(v.index+"       "+v);
-            System.out.println(this.S.vertices.get(i++).index);
-        }
-        
-        System.out.println(i);*/
     }
 	
-    /*calcule les poids m et retourne le cut tree*/
+    /*calculates cut tree with minimum perimeter heuristic*/
     public Hashtable<Integer, Halfedge<Point_3>> minimumParameter(){
     	   LinkedList<Halfedge<Point_3>> L = UnionFind.kruskal(new UnionFind(), this.S, new lengthComparator());
     	   Hashtable<Integer, Halfedge<Point_3>> ht = new Hashtable<>();
@@ -521,6 +468,7 @@ public class Unfold {
     	   return ht;
     }
     
+    /*calculates cut tree with flat spanning heuristic*/
     public Hashtable<Integer, Halfedge<Point_3>> flatSpanning(){
     		LinkedList<Halfedge<Point_3>> L = UnionFind.kruskal(new UnionFind(), this.S, new DirectionComparator(this.S.halfedges.get(0)));
  	   		Hashtable<Integer, Halfedge<Point_3>> ht = new Hashtable<>();
@@ -528,14 +476,12 @@ public class Unfold {
  	   		return ht;
     }
     
-    /**/
+    /*Removes overlaps from M using greedy algorithm to minimize cuts*/
     public void removeOverlaps(){
-    	RemoveOverlaps.removeOverlaps(intersection,this.M);
-    	
+    	int i = 0;
+    	for(Polyhedron_3<Point_2> P : RemoveOverlaps.removeOverlaps(this.intersection,this.M)){
+    		Mesh2DToOff(P,i+".off");
+    		ShowPlanarUnfolding.draw2D("results/2D_"+(i++)+".off");
+    	}    	
     }
-
-
-
-
-
 }
