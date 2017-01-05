@@ -1,37 +1,46 @@
 import java.util.*;
 import Jcg.geometry.Point_2;
-import Jcg.geometry.Segment_2;
 import Jcg.polyhedron.Face;
 import Jcg.polyhedron.Halfedge;
 import Jcg.polyhedron.Polyhedron_3;
-import Jcg.viewer.old.Fenetre;
-
-import static Jcg.geometry.GeometricOperations_2.intersect;
-
-import java.awt.color.*;
 
 public class RemoveOverlaps {
-	
+	/**
+	 * Removes all intersections in the Polyhedron by cutting it in pieces
+	 * @param intersection contains all the intersections between vertices
+	 * @param M the unfolding to cut
+	 * @return a List of Polyhedron
+	 */
 	public static LinkedList<Polyhedron_3<Point_2>> removeOverlaps(ArrayList<ArrayList<Integer>> intersection, Polyhedron_3<Point_2> M){
-		LinkedList<LinkedList<Halfedge<Point_2>>> P;
-		P = new LinkedList<LinkedList<Halfedge<Point_2>>>();//liste des chemins
+		HashMap<Integer,LinkedList<Halfedge<Point_2>>> P;//LinkedList<LinkedList<Halfedge<Point_2>>> P;
+		P = new HashMap<Integer,LinkedList<Halfedge<Point_2>>>();//LinkedList<LinkedList<Halfedge<Point_2>>>();//liste des chemins
+		System.out.println("chemins");
 		//calculer les chemins
 		for(int i = 0; i < intersection.size();i++){
-			for(int h : intersection.get(i)){			
-				P.add(calculChemin(M.halfedges.get(i),M.halfedges.get(h),M));
+			for(int h : intersection.get(i)){	
+				LinkedList<Halfedge<Point_2>> L = calculChemin(M.halfedges.get(i),M.halfedges.get(h),M);
+				if(!L.isEmpty())
+				P.put(L.hashCode(),L);
 			}
 		}
 		
+		System.out.println("decoupe");
 		//determiner où couper
 		
 		
 		LinkedList<Halfedge<Point_2>> S = new LinkedList<Halfedge<Point_2>>();
+		PriorityQueue<Halfedge<Point_2>> E = new PriorityQueue<Halfedge<Point_2>>(new HalfedgeCutComparator(P));
+		for(Halfedge<Point_2> h : M.halfedges){
+			E.add(h);
+		}
+		
+		System.out.println("taff   "+P.size());
 		while(!P.isEmpty()){
-			Halfedge<Point_2> e = null;
+			Halfedge<Point_2> e=null;
 			int max = 0;// cut edge
-			for(LinkedList<Halfedge<Point_2>> L : P){//determine le e à choisir
+			for(LinkedList<Halfedge<Point_2>> L : P.values()){//determine le e à choisir
 				for(Halfedge<Point_2> h : L){
-					int cutted = cutted(h,P);
+					int cutted = cutted(h,P);//has to be recalculated each time
 					if(cutted > max){
 						e = h; max = cutted;
 					}
@@ -39,16 +48,16 @@ public class RemoveOverlaps {
 			}
 			S.add(e);
 			LinkedList<LinkedList<Halfedge<Point_2>>> delete = new LinkedList<LinkedList<Halfedge<Point_2>>>();
-			for(LinkedList<Halfedge<Point_2>> L : P){
+			for(LinkedList<Halfedge<Point_2>> L : P.values()){
 				if(L.contains(e)) delete.add(L);
 			}
+			if(P.size() == 1) System.out.println(P.values());
 			for(LinkedList<Halfedge<Point_2>> L : delete){
-				P.remove(L);
+				P.remove(L.hashCode());
 			}
-			//System.out.println(max);
 		}
 		
-		//System.out.println("on va couper  "+S);
+		System.out.println("coupe");
 		//couper
 		for(Halfedge<Point_2> h : S){
 			System.out.println("h : "+h+"  opposé: "+h.opposite);
@@ -92,18 +101,23 @@ public class RemoveOverlaps {
 			}
 			res.add(poly);
 		}
-		System.out.println("ok");
 		
 		return res;
 	}
 	
-	
+	/**
+	 * Computes the shortest path between 2 edges in a Polyhedron using a form of dijkstra 
+	 * @param h1 first halfedge
+	 * @param h2 second halfedge
+	 * @param M the unfolding
+	 * @return the list of halfedges crossed in the Path
+	 */
 	public static LinkedList<Halfedge<Point_2>> calculChemin(Halfedge<Point_2> h1,Halfedge<Point_2> h2,Polyhedron_3<Point_2> M){
 		LinkedList<Halfedge<Point_2>> Path = new LinkedList<Halfedge<Point_2>>();//resultat
 		for(Face<Point_2> f : M.facets){
 			f.tag = -1;//pas visitées
 		}
-		Face<Point_2> f,Fa;
+		Face<Point_2> Fa;
 		
 		
 		LinkedList<Face<Point_2>> q = new LinkedList<Face<Point_2>>();//queue des faces visitées
@@ -138,17 +152,16 @@ public class RemoveOverlaps {
 			Path.add(h);
 			Fa = M.facets.get(Fa.tag);
 			}
-		if(Path.contains(M.halfedges.get(49))){
-			for(Halfedge<Point_2> h: Path){
-			}
-			
-		}
-		if(Path.contains(h1)||Path.contains(h2)) throw new Error("ca bug fdp");
+		if(Path.isEmpty()) System.out.println(h1+"         "+h2);
 
 		return Path;
 	}
 	
-	/*returns the list of the neighbors of a face F*/
+	/**
+	 * returns the list of the neighbors of a face
+	 * @param F Face to get neighbors from
+	 * @return list of faces
+	 */
 	public static LinkedList<Face<Point_2>> neighborFace(Face<Point_2> F){
 		LinkedList<Face<Point_2>> res = new LinkedList<Face<Point_2>>();
 		Halfedge<Point_2> h = F.getEdge();
@@ -163,7 +176,12 @@ public class RemoveOverlaps {
 		return res;
 	}
 	
-	/*return the edge between two faces if it exists, throws an error if not*/
+	/**
+	 * return the edge between two faces if it exists, throws an error if not
+	 * @param f1 first face
+	 * @param f2 second face
+	 * @return common edge of f1 f2
+	 */
 	public static Halfedge<Point_2> edge(Face<Point_2> f1,Face<Point_2> f2){
 		Halfedge<Point_2> h = f1.getEdge();
 		if(h.opposite.getFace() != null && h.opposite.getFace().equals(f2)) return h;
@@ -176,15 +194,25 @@ public class RemoveOverlaps {
 		throw new Error("pas de edge de liaison");
 	}
 	
-	/*Numbre of paths cutted in P*/
-	public static int cutted(Halfedge<Point_2> h,LinkedList<LinkedList<Halfedge<Point_2>>> P){
+	/**
+	 * Number of paths cutted in P if we cut on halfedge h
+	 * @param h halfedge that will be cut
+	 * @param P list oh paths
+	 * @return numbre of cu paths
+	 */
+	public static int cutted(Halfedge<Point_2> h,HashMap<Integer,LinkedList<Halfedge<Point_2>>> P){
 		int i = 0;
-		for(LinkedList<Halfedge<Point_2>> L : P){
+		for(LinkedList<Halfedge<Point_2>> L : P.values()){
 			if(L.contains(h)) i++;
 		}
 		return i;
 	}
 	
+	/**
+	 * Add a face to a Polyhedron
+	 * @param f face to add 
+	 * @param P Polyhedron in which the face will be added 
+	 */
 	public static void addFace(Face<Point_2> f, Polyhedron_3<Point_2> P){
 		Halfedge<Point_2> h = f.getEdge();
 		P.facets.add(f);
@@ -192,14 +220,13 @@ public class RemoveOverlaps {
 		if(!P.vertices.contains(h.getVertex())){//si non présent ajoute le vertex
 			P.vertices.add(h.getVertex());}
 		h=h.next;
-		int i = 0;
+
 		while(h != f.getEdge()){
 			P.halfedges.add(h);
 			
 			
 			if(!P.vertices.contains(h.getVertex())){//si non présent ajoute le vertex
 				P.vertices.add(h.getVertex());
-				//System.out.println(i++);
 				}
 			
 			h=h.next;
